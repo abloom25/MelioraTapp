@@ -65,7 +65,10 @@ export interface Track {
   album?: string
   cover?: string
   audioUrl: string
-  kind: 'meting' | 'remote' | 'local'
+  kind: 'meting' | 'remote' | 'local' | 'host'
+  /** Myriad 宿主曲目的取词参数(getLyrics 的 songId/source) */
+  songId?: string | number
+  source?: string
 }
 
 export interface MetingTrack {

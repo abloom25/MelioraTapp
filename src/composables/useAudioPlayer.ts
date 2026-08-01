@@ -49,7 +49,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
     if (host) {
       const matched = findHostTrack(host)
       if (matched && matched.id !== wasTrackId) {
-        store.setCurrentTrack(matched)
+        store.selectTrack(matched)
       }
     }
     if (store.currentTrackId !== wasTrackId) {
@@ -117,7 +117,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
     await hostMedia.prev()
   }
 
-  async function selectAndPlay(track: Track) {
+  async function selectAndPlay(track: Track, _queue?: Track[]) {
     const numericId = track.id.startsWith('host:') ? track.id.slice(5) : track.id
     const index = store.queue.indexOf(track)
     await hostMedia.playTrack(numericId, index >= 0 ? index : undefined)

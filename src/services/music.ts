@@ -9,7 +9,7 @@ export interface TrackLoadResult {
 
 // Tapp 版:曲目来自 Myriad 宿主播放列表(getPlaylist),不再有站点级歌单配置。
 // 接口与主仓一致,视图层零改动。
-export async function loadConfiguredTracks(): Promise<TrackLoadResult> {
+export async function loadConfiguredTracks(_config?: PublicMusicConfig): Promise<TrackLoadResult> {
   try {
     const playlist = await hostMedia.getPlaylist()
     if (Array.isArray(playlist)) {

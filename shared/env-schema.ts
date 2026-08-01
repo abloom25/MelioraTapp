@@ -1,0 +1,134 @@
+export interface PublicEnvLike {
+  GH_TOKEN?: string
+  GH_REPO?: string
+  GH_BRANCH?: string
+  CONFIG_ENCRYPTION_KEY?: string
+  DEVELOPMENT?: string
+  VERCEL_GIT_PROVIDER?: string
+  VERCEL_GIT_REPO_OWNER?: string
+  VERCEL_GIT_REPO_SLUG?: string
+  VERCEL_GIT_COMMIT_REF?: string
+  /** Vercel 部署环境(production/preview/development) */
+  VERCEL_ENV?: string
+  /** Netlify 部署上下文(production/deploy-preview/branch-deploy/dev) */
+  CONTEXT?: string
+  /** Cloudflare Pages 运行时标识(部署环境恒为 "1") */
+  CF_PAGES?: string
+}
+
+export interface EnvValidation {
+  ok: boolean
+  errors: string[]
+}
+
+export interface KeyValidation {
+  ok: boolean
+  error?: string
+}
+
+const MIN_KEY_LENGTH = 32
+const WEAK_KEY_PATTERNS = [
+  /^(.)\1+$/,
+  /^(0123456789|1234567890|abcdefgh|abcdefghijklmnopqrstuvwxyz)/i,
+]
+
+export function truthy(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase()
+  return v === 'true' || v === '1' || v === 'yes' || v === 'on'
+}
+
+// 托管生产平台标识:Vercel 生产部署 / Netlify 生产上下文 / 任意 Cloudflare Pages 部署。
+// 这些标记存在时 DEVELOPMENT 一律不生效——开发模式会把 Cookie 签名密钥、
+// 鉴权与配置加密全部降级,误带到公网部署即是安全事故
+export function isHostedProductionEnv(env: PublicEnvLike): boolean {
+  if ((env.VERCEL_ENV ?? '').trim().toLowerCase() === 'production') return true
+  if ((env.CONTEXT ?? '').trim().toLowerCase() === 'production') return true
+  if (truthy(env.CF_PAGES)) return true
+  return false
+}
+
+export function isDevelopmentMode(env: PublicEnvLike): boolean {
+  if (isHostedProductionEnv(env)) return false
+  return truthy(env.DEVELOPMENT)
+}
+
+export function isValidGitHubRepo(value: string | undefined): boolean {
+  const repo = value ?? ''
+  if (!repo) return false
+  if (repo !== repo.trim()) return false
+  const parts = repo.split('/')
+  if (parts.length !== 2) return false
+
+  const [owner, name] = parts
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(owner)) return false
+  if (name.length > 100) return false
+  if (!/^[A-Za-z0-9._-]+$/.test(name)) return false
+  if (name === '.' || name === '..' || name.endsWith('.git')) return false
+  return true
+}
+
+export function isUsableGitHubToken(value: string | undefined): boolean {
+  const token = value?.trim() || ''
+  return Boolean(token && !token.toLowerCase().startsWith('placeholder'))
+}
+
+export function resolveDeploymentEnv<T extends PublicEnvLike>(
+  env: T,
+): T & {
+  GH_REPO: string
+  GH_BRANCH: string
+} {
+  const explicitRepo = env.GH_REPO || ''
+  const inferredRepo = `${env.VERCEL_GIT_REPO_OWNER || ''}/${env.VERCEL_GIT_REPO_SLUG || ''}`
+  const provider = env.VERCEL_GIT_PROVIDER?.trim().toLowerCase() || 'github'
+  const GH_REPO =
+    explicitRepo || (provider === 'github' && isValidGitHubRepo(inferredRepo) ? inferredRepo : '')
+  const GH_BRANCH = env.GH_BRANCH?.trim() || env.VERCEL_GIT_COMMIT_REF?.trim() || 'main'
+
+  return { ...env, GH_REPO, GH_BRANCH }
+}
+
+export function validateEncryptionKey(env: PublicEnvLike): KeyValidation {
+  if (isDevelopmentMode(env)) return { ok: true }
+  const key = env.CONFIG_ENCRYPTION_KEY || ''
+  if (!key) {
+    return {
+      ok: false,
+      error: '未设置 CONFIG_ENCRYPTION_KEY 环境变量,请在部署平台配置后再初始化',
+    }
+  }
+  if (key.length < MIN_KEY_LENGTH) {
+    return {
+      ok: false,
+      error: `CONFIG_ENCRYPTION_KEY 强度不足(至少 ${MIN_KEY_LENGTH} 位),请更换为足够长的随机字符串`,
+    }
+  }
+  for (const pattern of WEAK_KEY_PATTERNS) {
+    if (pattern.test(key)) {
+      return {
+        ok: false,
+        error: 'CONFIG_ENCRYPTION_KEY 过于简单,请更换为随机字符串',
+      }
+    }
+  }
+  return { ok: true }
+}
+
+export function validatePublicEnv(env: PublicEnvLike): EnvValidation {
+  if (isDevelopmentMode(env)) return { ok: true, errors: [] }
+
+  const errors: string[] = []
+  if (!isUsableGitHubToken(env.GH_TOKEN)) {
+    errors.push('未设置可用 GH_TOKEN,请在部署平台配置 GitHub Token 后再初始化')
+  }
+  if (!isValidGitHubRepo(env.GH_REPO)) {
+    errors.push('GH_REPO 格式无效,请使用 owner/repo 格式,例如 abloom25/Meliora')
+  }
+
+  const keyCheck = validateEncryptionKey(env)
+  if (!keyCheck.ok && keyCheck.error) {
+    errors.push(keyCheck.error)
+  }
+
+  return { ok: errors.length === 0, errors }
+}

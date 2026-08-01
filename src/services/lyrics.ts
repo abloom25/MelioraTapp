@@ -3,7 +3,8 @@ import type { LyricLine, Track } from '../types/music'
 
 // 歌词服务:接口与主仓一致,数据改为宿主 Tapp.media.getLyrics。
 // 宿主逐行数据始终提供;逐字(yrc/KRC)结构宿主已返回,后续可升级逐字模式。
-export function hasTrackLyricsSource(track: Track): boolean {
+export function hasTrackLyricsSource(track: Track | null): boolean {
+  if (!track) return false
   if (track.kind === 'host') return true
   return track.songId !== undefined || Boolean(track.id)
 }

@@ -3,7 +3,6 @@
   import { storeToRefs } from 'pinia'
   import { APP_VERSION } from '../generated/app-version'
   import { usePlayerStore } from '../stores/player'
-  import EqualizerPanel from './EqualizerPanel.vue'
   import SettingRange from './SettingRange.vue'
   import SleepTimerControl from './SleepTimerControl.vue'
   import ToggleSwitch from './ToggleSwitch.vue'
@@ -71,14 +70,6 @@
           {{ playModeText }}
         </button>
       </div>
-      <div class="setting-row toggle-row">
-        <span><strong>平滑切歌</strong><small>切歌前淡出，载入后淡入</small></span>
-        <ToggleSwitch v-model="settings.smoothTrackChange" aria-label="平滑切歌" />
-      </div>
-      <div class="setting-row toggle-row">
-        <span><strong>预加载前后歌曲</strong><small>当前歌曲载入后准备上一首和下一首</small></span>
-        <ToggleSwitch v-model="settings.preloadNextTrack" aria-label="预加载前后歌曲" />
-      </div>
       <SleepTimerControl
         :minutes="sleepTimerMinutes"
         :remaining="sleepTimerRemaining"
@@ -89,20 +80,7 @@
         @input="emit('sleepTimerInput', $event)"
         @change="emit('sleepTimerChange', $event)"
       />
-      <div class="setting-row toggle-row">
-        <span><strong>失败后自动跳过</strong><small>继续尝试下一首歌曲</small></span>
-        <ToggleSwitch v-model="settings.skipOnError" aria-label="失败后自动跳过" />
-      </div>
     </div>
-
-    <EqualizerPanel
-      :enabled="settings.equalizer.enabled"
-      :preset="settings.equalizer.preset"
-      :bands="settings.equalizer.bands"
-      @update:enabled="settings.equalizer.enabled = $event"
-      @update:preset="settings.equalizer.preset = $event"
-      @update:bands="settings.equalizer.bands = $event"
-    />
 
     <div class="settings-section">
       <h3 class="settings-section-title">显示</h3>

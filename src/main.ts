@@ -1,15 +1,20 @@
-import { createApp, type App as VueApp } from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
+import router from './router'
 import { lifecycleOnDestroy, lifecycleOnReady } from './tapp/media'
+import './styles/global.scss'
 
-let app: VueApp | null = null
+let app: ReturnType<typeof createApp> | null = null
 
 lifecycleOnReady(() => {
-  const root = document.getElementById('tapp-root') ?? document.body
   app = createApp(App)
+  app.config.errorHandler = (error, _instance, info) => {
+    console.error('[全局错误]', info, error)
+  }
   app.use(createPinia())
-  app.mount(root)
+  app.use(router)
+  app.mount('#app')
 })
 
 lifecycleOnDestroy(() => {

@@ -1,31 +1,32 @@
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import { hostMedia, type HostBeatGrid } from '../tapp/media'
 
-// 帧率无关的一阶指数平滑(移植自 Meliora useBeatAnalyser,AGPL-3.0)
-function smoothingAlpha(dtSeconds: number, tauSeconds: number) {
-  return 1 - Math.exp(-dtSeconds / tauSeconds)
-}
+// 节拍可视化驱动:接口与主仓 useBeatAnalyser 完全一致
+// ({ beatLevel, spectrumLevels, startBeatAnalysis, stopBeatAnalysis }),
+// 数据源改为宿主 getBeatGrid(离线网格,优先)+ getSpectrum(实时频谱)。
+// 音频图相关参数(players/EQ/CORS)在 Tapp 版不存在,保留签名兼容调用方。
 
 const SPECTRUM_POLL_MS = 66 // ~15fps 拉取宿主频谱(postMessage 有成本)
 const GRID_MIN_CONFIDENCE = 0.5
 const BAND_COUNT = 5
-
-// 宿主 8 频段 → 主仓五段(sub/low/mid/high/air)映射权重
+// 宿主 8 频段 → 主仓五段(sub/low/mid/high/air)映射
 const BAND_MAP: number[][] = [[0], [1, 2], [3, 4], [5, 6], [7]]
 
-export interface HostBeatOptions {
-  /** 每帧写入 --beat-level 的目标节点(背景容器) */
-  getBeatTargets?: () => readonly (HTMLElement | null | undefined)[]
-  /** 每帧写入 --spectrum-level-N 的目标节点(队列小频谱 meter) */
-  getSpectrumTargets?: () => readonly (HTMLElement | null | undefined)[]
+function smoothingAlpha(dtSeconds: number, tauSeconds: number) {
+  return 1 - Math.exp(-dtSeconds / tauSeconds)
 }
 
-/**
- * 节拍可视化驱动:与 Meliora useBeatAnalyser 同形状输出
- * ({ beatLevel, spectrumLevels, start, stop }),数据源改为宿主
- * getBeatGrid(离线网格,优先)+ getSpectrum(实时频谱,兜底与柱图)。
- */
-export function useHostBeat(options: HostBeatOptions = {}) {
+export interface BeatAnalyserOptions {
+  players?: readonly HTMLAudioElement[]
+  getActiveAudio?: () => HTMLAudioElement
+  isPlaying?: Ref<boolean>
+  getBeatTargets?: () => readonly (HTMLElement | null | undefined)[]
+  getSpectrumTargets?: () => readonly (HTMLElement | null | undefined)[]
+  onEqFiltersReady?: (filters: BiquadFilterNode[]) => void
+  onTainted?: (audio: HTMLAudioElement) => void
+}
+
+export function useBeatAnalyser(options: BeatAnalyserOptions) {
   const beatLevel = ref(0)
   const spectrumLevels = ref<number[]>(Array.from({ length: BAND_COUNT }, () => 0.1))
 
@@ -94,10 +95,12 @@ export function useHostBeat(options: HostBeatOptions = {}) {
   function reanchorClock(timeSeconds: number) {
     clockAnchorTime = timeSeconds
     clockAnchorStamp = performance.now()
-    // 进度回调可能回跳(seek/切歌):节拍网格游标重新对齐
     if (beatGrid.available && beatGrid.beats) {
       nextBeatIndex = 0
-      while (nextBeatIndex < beatGrid.beats.length && beatGrid.beats[nextBeatIndex]! <= timeSeconds) {
+      while (
+        nextBeatIndex < beatGrid.beats.length &&
+        beatGrid.beats[nextBeatIndex]! <= timeSeconds
+      ) {
         nextBeatIndex += 1
       }
     }
@@ -136,7 +139,8 @@ export function useHostBeat(options: HostBeatOptions = {}) {
       const dt = SPECTRUM_POLL_MS / 1000
       const next = spectrumLevels.value.map((_, band) => {
         const indices = BAND_MAP[band] ?? [band]
-        const target = indices.reduce((sum, i) => sum + (Number(data.bands![i]) || 0), 0) / indices.length
+        const target =
+          indices.reduce((sum, i) => sum + (Number(data.bands![i]) || 0), 0) / indices.length
         const previous = bandLevels[band]!
         const tau = target > previous ? 0.05 : 0.22
         const level = previous + (target - previous) * smoothingAlpha(dt, tau)
@@ -148,7 +152,7 @@ export function useHostBeat(options: HostBeatOptions = {}) {
 
       // 无节拍网格时退回低频能量驱动脉冲
       if (!beatGrid.available) {
-        const bass = Number(data.bass) || (Number(data.bands[0]) || 0)
+        const bass = Number(data.bass) || Number(data.bands[0]) || 0
         bassFloor += (bass - bassFloor) * smoothingAlpha(dt, 1.1)
         if (bass > bassFloor * 1.4 && bass > 0.2) {
           impulse = Math.max(impulse, Math.min(1, 0.55 + bass * 0.45))
@@ -192,6 +196,14 @@ export function useHostBeat(options: HostBeatOptions = {}) {
     writeSpectrumToTargets(spectrumLevels.value)
   }
 
+  // 与主仓一致:暂停时停表,播放时启动
+  if (options.isPlaying) {
+    watch(options.isPlaying, (playing) => {
+      if (playing) startBeatAnalysis()
+      else stopBeatAnalysis()
+    })
+  }
+
   onBeforeUnmount(() => {
     stopBeatAnalysis()
   })
@@ -201,9 +213,9 @@ export function useHostBeat(options: HostBeatOptions = {}) {
     spectrumLevels,
     startBeatAnalysis,
     stopBeatAnalysis,
-    /** 进度回调时同步时钟与网格游标 */
+    /** 进度回调时同步时钟与网格游标(host-player 调用) */
     syncProgress: reanchorClock,
-    /** 曲目切换时重新加载节拍网格 */
+    /** 曲目切换时重新加载节拍网格(host-player 调用) */
     reloadBeatGrid: loadBeatGrid,
   }
 }

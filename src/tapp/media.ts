@@ -122,6 +122,9 @@ export const hostMedia = {
   playTrack: (trackId: string, trackIndex?: number) =>
     api()!.playTrack ? api()!.playTrack!(trackId, trackIndex) : Promise.resolve(),
   getStatus: () => api()!.getStatus(),
+  hasSpectrum: () => Boolean(api()?.getSpectrum),
+  mute: () => (api()!.mute ? api()!.mute!() : Promise.resolve()),
+  unmute: () => (api()!.unmute ? api()!.unmute!() : Promise.resolve()),
   getPlaylist: () => (api()!.getPlaylist ? api()!.getPlaylist!() : Promise.resolve([])),
   getLyrics: (args?: { songId?: string | number; source?: string }) => api()!.getLyrics(args),
   getBeatGrid: (): Promise<HostBeatGrid> =>

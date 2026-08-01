@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Pause, Play, SkipBack, SkipForward } from '@lucide/vue'
+  import TappIcon from './TappIcon.vue'
 
   const props = withDefaults(
     defineProps<{
@@ -30,18 +30,18 @@
 <template>
   <div :class="[variant === 'mini' ? 'mini-buttons' : 'transport-buttons', `is-${variant}`]">
     <button class="control-button" aria-label="上一首" @click="onPrevious">
-      <SkipBack :size="iconSize()" fill="currentColor" />
+      <TappIcon name="previous" :size="iconSize()" />
     </button>
     <button
       :class="variant === 'mini' ? 'mini-play' : 'play-button'"
       :aria-label="isPlaying ? '暂停' : '播放'"
       @click="onToggle"
     >
-      <Pause v-if="isPlaying" :size="playIconSize()" fill="currentColor" />
-      <Play v-else :size="playIconSize()" fill="currentColor" />
+      <TappIcon v-if="isPlaying" name="pause" :size="playIconSize()" />
+      <TappIcon v-else name="play" :size="playIconSize()" />
     </button>
     <button class="control-button" aria-label="下一首" @click="onNext">
-      <SkipForward :size="iconSize()" fill="currentColor" />
+      <TappIcon name="next" :size="iconSize()" />
     </button>
   </div>
 </template>

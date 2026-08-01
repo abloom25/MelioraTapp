@@ -1,5 +1,6 @@
 /*
- * Tapp.storage 适配层:宿主的异步键值存储镜像为同步读缓存。
+ * Tapp.storage 适配层:与官方 com.myriad.music-player 的实现一致——
+ * 每个设置项一个独立 key,宿库存原生类型(布尔/数字/对象),不用 JSON 大 blob。
  * - 启动时(initTappStorage)把关心的 key 一次性读入内存镜像
  * - 写操作同步落镜像,再异步上行到宿主(失败静默,镜像仍保持会话内一致)
  * - 访客没有 Runtime Grant 时宿主存储不可用,自动退化为会话内存,
@@ -50,7 +51,14 @@ export function tappStorageSet(key: string, value: string): void {
   mirror.set(key, value)
   const storage = api()
   if (!storage) return
-  void storage.set(key, value).catch(() => {
+  // 宿库存原生类型(与官方实现一致);镜像侧统一保持字符串,兼容 localStorage 语义
+  let nativeValue: unknown = value
+  try {
+    nativeValue = JSON.parse(value)
+  } catch {
+    // 纯字符串保持原样
+  }
+  void storage.set(key, nativeValue).catch(() => {
     // 上行失败(访客无 grant/配额满):镜像已更新,会话内行为不受影响
   })
 }

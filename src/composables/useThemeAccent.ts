@@ -2,9 +2,10 @@ import { onBeforeUnmount, ref } from 'vue'
 import type { ThemeColor } from '../utils/theme'
 import { isReducedMotion } from '../utils/motion'
 
-const DEFAULT_ACCENT = '#81d8d0'
-const DEFAULT_ACCENT_SOFT = '#a7e7e2'
-const DEFAULT_ACCENT_RGB = '129, 216, 208'
+// 默认值与 Tapp 宿主默认主色一致(--tapp-primary 默认 #6366f1,见 tapp-store STYLING.md)
+const DEFAULT_ACCENT = '#6366f1'
+const DEFAULT_ACCENT_SOFT = '#a5b4fc'
+const DEFAULT_ACCENT_RGB = '99, 102, 241'
 
 // 检测浏览器是否支持 CSS @property 注册（Chrome 85+ / Safari 16.4+）
 // 若支持，则由 CSS 原生处理颜色过渡，避免 JS requestAnimationFrame 每帧更新 ref
@@ -39,8 +40,8 @@ export function useThemeAccent() {
       ]
     }
 
-    const channels = value.match(/\d+(\.\d+)?/g)?.map(Number) ?? [129, 216, 208]
-    return [channels[0] ?? 129, channels[1] ?? 216, channels[2] ?? 208]
+    const channels = value.match(/\d+(\.\d+)?/g)?.map(Number) ?? [99, 102, 241]
+    return [channels[0] ?? 99, channels[1] ?? 102, channels[2] ?? 241]
   }
 
   function formatRgb([red, green, blue]: [number, number, number]) {

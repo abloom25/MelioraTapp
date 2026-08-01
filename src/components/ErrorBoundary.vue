@@ -64,7 +64,7 @@
   .error-icon {
     width: 3rem;
     height: 3rem;
-    color: var(--accent, #81d8d0);
+    color: var(--accent, #6366f1);
     opacity: 0.8;
   }
 
@@ -86,10 +86,10 @@
   .error-retry {
     margin-top: 0.5rem;
     padding: 0.5rem 1.5rem;
-    border: 1px solid var(--accent, #81d8d0);
+    border: 1px solid var(--accent, #6366f1);
     border-radius: 0.5rem;
     background: transparent;
-    color: var(--accent, #81d8d0);
+    color: var(--accent, #6366f1);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -98,7 +98,7 @@
       opacity 0.2s;
 
     &:hover {
-      background: color-mix(in srgb, var(--accent, #81d8d0) 12%, transparent);
+      background: color-mix(in srgb, var(--accent, #6366f1) 12%, transparent);
     }
 
     &:active {

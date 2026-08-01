@@ -5,16 +5,35 @@ import { transferTrackLyricsProvider } from '../services/lyrics'
 import { safeStorage } from '../utils/storage'
 import { createDefaultEqualizer, sanitizeEqualizer } from '../utils/equalizer'
 
-const SETTINGS_KEY = 'meliora:settings'
-const LAST_TRACK_KEY = 'meliora:last-track'
+const LAST_TRACK_KEY = 'lastTrack'
 
 const CURRENT_SETTINGS_VERSION = 1
+
+// 与官方 com.myriad.music-player 一致:每个设置项一个独立的 Tapp.storage key
+// (存储按 Tapp 隔离,无需前缀)。settingsVersion 是迁移标记,不持久化。
+const PERSISTED_SETTING_KEYS = [
+  'volume',
+  'playMode',
+  'dynamicBackground',
+  'backgroundBlur',
+  'backgroundSaturation',
+  'beatBrightness',
+  'lyricFontSize',
+  'lyricAnimation',
+  'lyricTranslation',
+  'progressLyricPreview',
+  'autoHideChrome',
+  'equalizer',
+] as const satisfies readonly (keyof PlayerSettings)[]
+
+type PersistedSettingKey = (typeof PERSISTED_SETTING_KEYS)[number]
+
+// main.ts 启动时预载的 key 列表
+export const PERSISTED_STORAGE_KEYS = [...PERSISTED_SETTING_KEYS, LAST_TRACK_KEY] as const
 
 const defaultSettings: PlayerSettings = {
   volume: 0.72,
   playMode: 'loop',
-  smoothTrackChange: true,
-  preloadNextTrack: true,
   dynamicBackground: true,
   backgroundBlur: 90,
   backgroundSaturation: 1.15,
@@ -23,7 +42,6 @@ const defaultSettings: PlayerSettings = {
   lyricAnimation: true,
   lyricTranslation: true,
   progressLyricPreview: false,
-  skipOnError: true,
   autoHideChrome: true,
   equalizer: createDefaultEqualizer(),
   settingsVersion: CURRENT_SETTINGS_VERSION,
@@ -34,8 +52,6 @@ export function migrateSettings(saved: Partial<PlayerSettings>): PlayerSettings 
   return {
     volume: sanitizeNumber(input.volume, defaultSettings.volume, 0, 1),
     playMode: sanitizePlayMode(input.playMode),
-    smoothTrackChange: sanitizeBoolean(input.smoothTrackChange, defaultSettings.smoothTrackChange),
-    preloadNextTrack: sanitizeBoolean(input.preloadNextTrack, defaultSettings.preloadNextTrack),
     dynamicBackground: sanitizeBoolean(input.dynamicBackground, defaultSettings.dynamicBackground),
     backgroundBlur: sanitizeNumber(input.backgroundBlur, defaultSettings.backgroundBlur, 45, 130),
     backgroundSaturation: sanitizeNumber(
@@ -52,7 +68,6 @@ export function migrateSettings(saved: Partial<PlayerSettings>): PlayerSettings 
       input.progressLyricPreview,
       defaultSettings.progressLyricPreview,
     ),
-    skipOnError: sanitizeBoolean(input.skipOnError, defaultSettings.skipOnError),
     autoHideChrome: sanitizeBoolean(input.autoHideChrome, defaultSettings.autoHideChrome),
     equalizer: sanitizeEqualizer(input.equalizer),
     settingsVersion: CURRENT_SETTINGS_VERSION,
@@ -76,12 +91,17 @@ function sanitizePlayMode(value: unknown): PlayMode {
 }
 
 function loadSettings(): PlayerSettings {
-  try {
-    const saved = JSON.parse(safeStorage.getItem(SETTINGS_KEY) || '{}') as Partial<PlayerSettings>
-    return migrateSettings(saved)
-  } catch {
-    return { ...defaultSettings }
+  const saved: Partial<PlayerSettings> = {}
+  for (const key of PERSISTED_SETTING_KEYS) {
+    const raw = safeStorage.getItem(key)
+    if (raw === null) continue
+    try {
+      ;(saved as Record<string, unknown>)[key] = JSON.parse(raw)
+    } catch {
+      // 单项损坏时忽略,走默认值
+    }
   }
+  return migrateSettings(saved)
 }
 
 export const usePlayerStore = defineStore('player', () => {
@@ -227,26 +247,36 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   let saveSettingsTimer = 0
-  function persistSettings() {
-    safeStorage.setItem(SETTINGS_KEY, JSON.stringify(settings.value))
+  const dirtySettingKeys = new Set<PersistedSettingKey>()
+  function flushSettings() {
+    if (saveSettingsTimer) {
+      window.clearTimeout(saveSettingsTimer)
+      saveSettingsTimer = 0
+    }
+    for (const key of dirtySettingKeys) {
+      safeStorage.setItem(key, JSON.stringify(settings.value[key]))
+    }
+    dirtySettingKeys.clear()
   }
   // store 被 dispose(其 effect scope 销毁)时清理挂起的防抖定时器,
   // 并立即落盘尚未写入的设置,避免丢失最后一次修改。
   onScopeDispose(() => {
-    if (saveSettingsTimer) {
-      window.clearTimeout(saveSettingsTimer)
-      saveSettingsTimer = 0
-      persistSettings()
-    }
+    if (saveSettingsTimer || dirtySettingKeys.size) flushSettings()
   })
-  watch(
-    settings,
-    () => {
-      if (saveSettingsTimer) window.clearTimeout(saveSettingsTimer)
-      saveSettingsTimer = window.setTimeout(persistSettings, 200)
-    },
-    { deep: true },
-  )
+  // 逐项监听:只把变化的 key 写入宿主(与官方 music-player 的单 key 写入一致),
+  // 200ms 防抖合并滑杆拖动等高频修改。
+  for (const key of PERSISTED_SETTING_KEYS) {
+    watch(
+      () => settings.value[key],
+      () => {
+        dirtySettingKeys.add(key)
+        if (saveSettingsTimer) window.clearTimeout(saveSettingsTimer)
+        saveSettingsTimer = window.setTimeout(flushSettings, 200)
+      },
+      // equalizer 是对象,需要 deep;原始类型 deep 无副作用
+      { deep: true },
+    )
+  }
   watch(currentTrackId, (value) => {
     if (value) safeStorage.setItem(LAST_TRACK_KEY, value)
     else safeStorage.removeItem(LAST_TRACK_KEY)

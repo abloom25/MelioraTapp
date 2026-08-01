@@ -9,7 +9,7 @@
     watch,
     type ComponentPublicInstance,
   } from 'vue'
-  import { Music, RefreshCw, Search, X } from '@lucide/vue'
+  import TappIcon from './TappIcon.vue'
   import type { Track } from '../types/music'
   import { useCoverCache } from '../composables/useCoverCache'
 
@@ -232,10 +232,10 @@
     <div class="list-toolbar">
       <div class="search-row">
         <label class="search-box">
-          <Search :size="16" />
+          <TappIcon name="search" :size="16" />
           <input v-model="debouncedQuery" type="search" aria-label="搜索歌曲" placeholder="搜索" />
           <button v-if="debouncedQuery" aria-label="清空搜索" @click="clearSearch">
-            <X :size="14" />
+            <TappIcon name="close" :size="14" />
           </button>
         </label>
         <button
@@ -245,7 +245,7 @@
           :disabled="loading"
           @click="emit('reload')"
         >
-          <RefreshCw :size="16" :class="{ spinning: loading }" />
+          <TappIcon name="refresh" :size="16" :class="{ spinning: loading }" />
         </button>
       </div>
     </div>
@@ -270,7 +270,7 @@
           @click="emit('select', track)"
         >
           <span class="thumb" :class="{ loaded: loadedCovers.has(track.id) }">
-            <span class="cover-placeholder"><Music :size="20" fill="currentColor" /></span>
+            <span class="cover-placeholder"><TappIcon name="music-note" :size="20" /></span>
             <img
               v-if="track.cover && !failedCovers.has(track.id)"
               :src="track.cover"

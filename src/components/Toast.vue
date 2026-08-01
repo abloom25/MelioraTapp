@@ -65,7 +65,7 @@
   }
 
   .app-toast.success {
-    background: rgba(129, 216, 208, 0.2);
+    background: rgba(99, 102, 241, 0.2);
     color: #fff;
   }
 

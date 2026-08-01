@@ -50,10 +50,22 @@ export interface MusicConfig extends PublicMusicConfig {
   receivePrereleaseUpdates?: boolean
 }
 
+export interface LyricWord {
+  /** 绝对秒 */
+  time: number
+  /** 秒 */
+  duration: number
+  text: string
+}
+
 export interface LyricLine {
   time: number | null
   text: string
   translation?: string
+  /** 行时长(秒),逐字歌词提供 */
+  duration?: number
+  /** 逐字(卡拉OK)词序列,word.time 为绝对秒;存在时按逐字模式渲染 */
+  words?: LyricWord[]
 }
 
 export interface Track {
@@ -96,8 +108,6 @@ export interface EqualizerSettings {
 export interface PlayerSettings {
   volume: number
   playMode: PlayMode
-  smoothTrackChange: boolean
-  preloadNextTrack: boolean
   dynamicBackground: boolean
   backgroundBlur: number
   backgroundSaturation: number
@@ -106,7 +116,6 @@ export interface PlayerSettings {
   lyricAnimation: boolean
   lyricTranslation: boolean
   progressLyricPreview: boolean
-  skipOnError: boolean
   autoHideChrome: boolean
   equalizer: EqualizerSettings
   settingsVersion: number

@@ -7,11 +7,16 @@ export interface HostTrack {
   id?: string
   songId?: string | number
   title?: string
+  // 宿主部分版本用 name 而不是 title(参考 com.myriad.music-player 的兼容写法)
+  name?: string
   artist?: string
   cover?: string
   album?: string
   source?: 'netease' | 'qq' | 'kugou' | string
 }
+
+// 宿主实际返回 { tracks: [...] } 包装对象,旧版本返回裸数组,两种都要兼容
+export type HostPlaylistResult = HostTrack[] | { tracks?: HostTrack[] }
 
 export interface HostStatus {
   isPlaying: boolean
@@ -73,7 +78,7 @@ interface HostMedia {
   setMode?(mode: string): Promise<void>
   playTrack?(trackId: string, trackIndex?: number): Promise<void>
   getStatus(): Promise<HostStatus>
-  getPlaylist?(): Promise<HostTrack[]>
+  getPlaylist?(): Promise<HostPlaylistResult>
   getLyrics(args?: { songId?: string | number; source?: string }): Promise<HostLyricsResult>
   getBeatGrid?(): Promise<HostBeatGrid>
   getSpectrum?(): Promise<HostSpectrum>
@@ -133,7 +138,8 @@ export const hostMedia = {
   hasSpectrum: () => Boolean(api()?.getSpectrum),
   mute: () => (api()!.mute ? api()!.mute!() : Promise.resolve()),
   unmute: () => (api()!.unmute ? api()!.unmute!() : Promise.resolve()),
-  getPlaylist: () => (api()!.getPlaylist ? api()!.getPlaylist!() : Promise.resolve([])),
+  getPlaylist: (): Promise<HostPlaylistResult> =>
+    api()!.getPlaylist ? api()!.getPlaylist!() : Promise.resolve([]),
   getLyrics: (args?: { songId?: string | number; source?: string }) => api()!.getLyrics(args),
   getBeatGrid: (): Promise<HostBeatGrid> =>
     api()!.getBeatGrid

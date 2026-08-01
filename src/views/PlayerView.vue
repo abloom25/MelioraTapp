@@ -1,18 +1,7 @@
 <script setup lang="ts">
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
-  import {
-    ArrowRight,
-    ListMusic,
-    MessageSquareText,
-    Music,
-    Repeat1,
-    Repeat2,
-    Settings,
-    Share2,
-    Shuffle,
-  } from '@lucide/vue'
-  import { musicConfig } from '../config/music'
+    import { musicConfig } from '../config/music'
   import { hasTrackLyricsSource } from '../services/lyrics'
   import { loadConfiguredTracks, loadMusicConfig } from '../services/music'
   import { usePlayerStore } from '../stores/player'
@@ -37,15 +26,16 @@
   import LyricsPanel from '../components/LyricsPanel.vue'
   import PlayerControls from '../components/PlayerControls.vue'
   import SettingsPanel from '../components/SettingsPanel.vue'
+  import TappIcon from '../components/TappIcon.vue'
   import TrackList from '../components/TrackList.vue'
   import Toast from '../components/Toast.vue'
   import type { LyricAvailability, LyricsSnapshot, PublicMusicConfig, Track } from '../types/music'
 
   const PLAY_MODE_META = {
-    sequence: { text: '顺序播放', icon: ArrowRight },
-    loop: { text: '列表循环', icon: Repeat2 },
-    single: { text: '单曲循环', icon: Repeat1 },
-    shuffle: { text: '随机播放', icon: Shuffle },
+    sequence: { text: '顺序播放', icon: 'sequence' },
+    loop: { text: '列表循环', icon: 'loop' },
+    single: { text: '单曲循环', icon: 'single' },
+    shuffle: { text: '随机播放', icon: 'shuffle' },
   } as const
 
   const runtimeConfig = ref<PublicMusicConfig>(musicConfig)
@@ -693,9 +683,6 @@
     <div ref="backgroundOverlayRef" class="background-overlay" :style="{ '--beat-level': '0' }" />
 
     <header class="topbar" @click="onTopbarClick">
-      <div class="brand">
-        <span>{{ runtimeConfig.siteName }}</span>
-      </div>
       <div class="top-actions">
         <span v-if="sourceWarning" class="source-warning">{{ sourceWarning }}</span>
         <button
@@ -705,7 +692,7 @@
           :disabled="!currentTrack"
           @click="shareCurrentTrack"
         >
-          <Share2 :size="19" />
+          <TappIcon name="share" :size="19" />
         </button>
         <button
           class="nav-button settings-button"
@@ -717,7 +704,7 @@
           :disabled="!settingsAvailable"
           @click="toggleSettings"
         >
-          <Settings :size="19" />
+          <TappIcon name="settings" :size="19" />
         </button>
       </div>
     </header>
@@ -822,7 +809,7 @@
         />
         <div class="mobile-control-actions">
           <button :aria-label="playModeText" :title="playModeText" @click="cyclePlayModeWithHaptic">
-            <component :is="playModeIcon" :size="20" />
+            <TappIcon :name="playModeIcon" :size="20" />
           </button>
           <button
             :class="{ active: listOpen }"
@@ -830,7 +817,7 @@
             title="曲库"
             @click="toggleLibrary"
           >
-            <ListMusic :size="21" />
+            <TappIcon name="playlist" :size="21" />
           </button>
           <button
             :class="{ active: mobileView === 'lyrics' }"
@@ -838,7 +825,7 @@
             :disabled="lyricAvailability === 'unavailable'"
             @click="toggleLyrics"
           >
-            <MessageSquareText :size="20" />
+            <TappIcon name="lyrics" :size="20" />
           </button>
         </div>
       </div>
@@ -869,7 +856,7 @@
       </div>
       <div class="dock-actions">
         <button :aria-label="playModeText" :title="playModeText" @click="cyclePlayModeWithHaptic">
-          <component :is="playModeIcon" :size="19" />
+          <TappIcon :name="playModeIcon" :size="19" />
         </button>
         <button
           :class="{ active: listOpen }"
@@ -877,7 +864,7 @@
           title="曲库"
           @click="toggleLibrary"
         >
-          <ListMusic :size="20" />
+          <TappIcon name="playlist" :size="20" />
         </button>
         <button
           :class="{ active: lyricsLayoutVisible }"
@@ -892,7 +879,7 @@
           :disabled="lyricAvailability === 'unavailable' && !lyricsLayoutVisible"
           @click="toggleLyrics"
         >
-          <MessageSquareText :size="19" />
+          <TappIcon name="lyrics" :size="19" />
         </button>
       </div>
     </footer>
@@ -938,7 +925,7 @@
         />
         <div v-if="currentTrack" class="drawer-mini-player">
           <span class="mini-artwork" :class="{ loaded: loadedCovers.has(currentTrack.id) }">
-            <span class="small-cover-placeholder"><Music :size="18" fill="currentColor" /></span>
+            <span class="small-cover-placeholder"><TappIcon name="music-note" :size="18" /></span>
             <img
               v-if="currentTrack.cover && !failedCovers.has(currentTrack.id)"
               :src="currentTrack.cover"
@@ -1090,12 +1077,14 @@
   }
   .background-overlay {
     z-index: -1;
+    // 封层透明度对齐官方 music-player 的深色封层(0.3 → 0.5 → 0.7),
+    // 比原来的 0.5/0.7/0.9 更透,宿主壁纸与封面能透上来
     background:
       linear-gradient(
         180deg,
-        rgba(12, 12, 14, calc(0.5 - var(--beat-level) * 0.1)),
-        rgba(12, 12, 14, 0.7) 42%,
-        rgba(10, 10, 12, 0.9)
+        rgba(12, 12, 14, calc(0.3 - var(--beat-level) * 0.1)),
+        rgba(12, 12, 14, 0.5) 40%,
+        rgba(10, 10, 12, 0.7)
       ),
       radial-gradient(
         circle at 20% 18%,
@@ -1133,22 +1122,12 @@
     display: flex;
     height: 64px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 0 28px;
     background: transparent;
     transition:
       opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1),
       transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    color: #fff;
-    font-size: 0.96rem;
-    font-weight: 650;
-    letter-spacing: -0.02em;
-    text-decoration: none;
   }
   .top-actions {
     display: flex;
@@ -1807,10 +1786,6 @@
       padding: max(6px, env(safe-area-inset-top)) 14px 0;
       background: transparent;
     }
-    .brand {
-      gap: 7px;
-      font-size: 0.88rem;
-    }
     .top-actions {
       gap: 0;
     }
@@ -2075,9 +2050,6 @@
       height: 54px;
       padding-right: 10px;
       padding-left: 12px;
-    }
-    .brand span {
-      font-size: 0.8rem;
     }
     .nav-button {
       width: 33px;

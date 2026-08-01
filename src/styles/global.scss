@@ -1,6 +1,8 @@
 :root {
   color: rgba(255, 255, 255, 0.9);
-  background: #0e0d12;
+  // 不设底色:与官方 music-player 一致,背景完全由固定的封面层+封层(overlay)
+  // 提供,让宿主壁纸能透过封层隐约显现,页面与宿主环境融合
+  background: transparent;
   font-family: Inter, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -9,8 +11,8 @@
   --text: rgba(255, 255, 255, 0.92);
   --text-muted: rgba(255, 255, 255, 0.68);
   --text-subtle: rgba(255, 255, 255, 0.43);
-  --accent: #81d8d0;
-  --accent-soft: #a7e7e2;
+  --accent: #6366f1;
+  --accent-soft: #a5b4fc;
 }
 
 // 注册 CSS 变量为 @property，使浏览器能够原生过渡 color 类型（需 Chrome 85+ / Safari 16.4+）
@@ -18,13 +20,13 @@
 @property --accent {
   syntax: '<color>';
   inherits: true;
-  initial-value: #81d8d0;
+  initial-value: #6366f1;
 }
 
 @property --accent-soft {
   syntax: '<color>';
   inherits: true;
-  initial-value: #a7e7e2;
+  initial-value: #a5b4fc;
 }
 
 :root {
@@ -90,7 +92,7 @@ button:disabled {
 }
 
 ::selection {
-  background: rgba(129, 216, 208, 0.35);
+  background: rgba(99, 102, 241, 0.35);
   color: #fff;
 }
 

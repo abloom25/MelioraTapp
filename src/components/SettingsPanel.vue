@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Download, GitFork, PictureInPicture2, SlidersHorizontal } from '@lucide/vue'
+  import TappIcon from './TappIcon.vue'
   import { storeToRefs } from 'pinia'
   import { APP_VERSION } from '../generated/app-version'
   import { usePlayerStore } from '../stores/player'
@@ -50,7 +50,7 @@
       <div class="setting-group">
         <div class="setting-group-label">
           <span id="setting-volume-label"
-            ><SlidersHorizontal :size="17" /><strong>音量</strong></span
+            ><TappIcon name="tune" :size="17" /><strong>音量</strong></span
           ><strong>{{ Math.round(settings.volume * 100) }}%</strong>
         </div>
         <SettingRange
@@ -142,7 +142,7 @@
                 : '选择歌曲后可用'
           }}</small>
         </span>
-        <PictureInPicture2 :size="20" />
+        <TappIcon name="pip" :size="20" />
       </button>
       <button
         v-if="canInstall && !isInstalled"
@@ -150,7 +150,7 @@
         @click="emit('installPwa')"
       >
         <span><strong>安装 Meliora</strong><small>添加到桌面并支持离线启动</small></span>
-        <Download :size="19" />
+        <TappIcon name="download" :size="19" />
       </button>
       <button
         v-if="iosInstallAvailable && !canInstall"
@@ -158,7 +158,7 @@
         @click="emit('showIosInstallGuide')"
       >
         <span><strong>安装 Meliora</strong><small>通过 Safari 分享菜单添加到主屏幕</small></span>
-        <Download :size="19" />
+        <TappIcon name="download" :size="19" />
       </button>
     </div>
 
@@ -220,7 +220,7 @@
           <span class="about-version">v{{ APP_VERSION }}</span>
         </div>
         <a class="about-repo" :href="REPO_URL" target="_blank" rel="noopener noreferrer">
-          <GitFork :size="16" />
+          <TappIcon name="fork" :size="16" />
           <span>GitHub 仓库</span>
         </a>
       </div>

@@ -2,7 +2,7 @@ import { hostMedia } from '../tapp/media'
 import type { LyricLine, Track } from '../types/music'
 
 // 歌词服务:接口与主仓一致,数据改为宿主 Tapp.media.getLyrics。
-// 宿主逐行数据始终提供;逐字(yrc/KRC)结构宿主已返回,后续可升级逐字模式。
+// 逐字(网易 yrc/酷狗 KRC)优先,宿主未命中逐字时回退逐行 LRC。
 export function hasTrackLyricsSource(track: Track | null): boolean {
   if (!track) return false
   if (track.kind === 'host') return true
@@ -20,6 +20,28 @@ export async function loadTrackLyrics(track: Track, signal?: AbortSignal): Promi
     isCurrentish ? undefined : { songId: track.songId, source: track.source },
   )
   if (signal?.aborted) return []
+  // 逐字(网易 yrc/酷狗 KRC)优先;宿主契约:verbatim 为空时消费方回退 lines 逐行高亮
+  const verbatim = Array.isArray(result?.verbatim) ? result.verbatim : []
+  if (verbatim.length) {
+    return verbatim
+      .filter((line) => typeof line.time === 'number' && line.text?.trim())
+      .map((line) => ({
+        time: line.time,
+        duration: typeof line.duration === 'number' ? line.duration : undefined,
+        text: line.text.trim(),
+        translation: line.translation?.trim() || undefined,
+        words: Array.isArray(line.words)
+          ? line.words
+              .filter(
+                (word) =>
+                  typeof word.time === 'number' &&
+                  typeof word.duration === 'number' &&
+                  word.text?.trim(),
+              )
+              .map((word) => ({ time: word.time, duration: word.duration, text: word.text }))
+          : undefined,
+      }))
+  }
   const lines = Array.isArray(result?.lines) ? result.lines : []
   return lines
     .filter((line) => typeof line.time === 'number' && line.text?.trim())

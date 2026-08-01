@@ -11,7 +11,10 @@ export interface TrackLoadResult {
 // 接口与主仓一致,视图层零改动。
 export async function loadConfiguredTracks(_config?: PublicMusicConfig): Promise<TrackLoadResult> {
   try {
-    const playlist = await hostMedia.getPlaylist()
+    const result = await hostMedia.getPlaylist()
+    // 宿主当前返回 { tracks: [...] } 包装对象,旧版本返回裸数组,两种都兼容
+    // (与官方 com.myriad.music-player 的归一化逻辑一致)
+    const playlist = Array.isArray(result) ? result : result?.tracks
     if (Array.isArray(playlist)) {
       return { tracks: playlist.map((track, index) => mapPlaylistTrack(track, index)), failedSources: 0 }
     }
@@ -22,12 +25,12 @@ export async function loadConfiguredTracks(_config?: PublicMusicConfig): Promise
 }
 
 function mapPlaylistTrack(
-  track: { id?: string; songId?: string | number; title?: string; artist?: string; cover?: string; album?: string; source?: string },
+  track: { id?: string; songId?: string | number; title?: string; name?: string; artist?: string; cover?: string; album?: string; source?: string },
   index: number,
 ): Track {
   return {
     id: `host:${track.id ?? track.songId ?? index}`,
-    title: track.title?.trim() || '未知曲目',
+    title: track.title?.trim() || track.name?.trim() || '未知曲目',
     artist: track.artist?.trim() || '未知艺术家',
     album: track.album?.trim() || undefined,
     cover: track.cover?.trim() || undefined,

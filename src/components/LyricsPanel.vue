@@ -6,6 +6,7 @@
   import { findActiveLyricIndex } from '../utils/lyrics'
   import { supportsWebAnimations } from '../utils/browser'
   import { listenMediaQuery } from '../utils/media-query'
+  import VerbatimText from './VerbatimText.vue'
   import type {
     LyricAvailability,
     LyricLine,
@@ -41,6 +42,9 @@
   // 会成片跳行。这里以每次 currentTime 更新为锚点做 rAF 外推,得到 60fps 的同步时钟,
   // 锚点每次更新会自动校正漂移;暂停时外推停止,时钟冻结在锚点。
   const lyricClock = ref(currentTime.value)
+  // 传给逐字组件的时钟访问器:读取发生在子组件 computed 内,
+  // 60fps 时钟更新只触发逐字行重渲染,面板其余部分不受影响
+  const getLyricClock = () => lyricClock.value
   let clockAnchorTime = currentTime.value
   let clockAnchorStamp = performance.now()
   let clockRaf = 0
@@ -508,9 +512,12 @@
     if (settings.value.lyricTranslation) return lines.value
     return lines.value.map((line) => {
       if (!line.translation) return line
+      // 仅剥翻译,逐字数据必须保留
       return {
         time: line.time,
         text: line.text,
+        duration: line.duration,
+        words: line.words,
       }
     })
   })
@@ -548,6 +555,8 @@
 
   function needsHighRateClock(): boolean {
     if (targetIndex.value < 0) return false
+    // 逐字(卡拉OK)行需要 60fps 时钟驱动逐词扫亮
+    if (lines.value[targetIndex.value]?.words?.length) return true
     return getRealignBudgetMs(targetIndex.value) < CLOCK_HIGH_RATE_THRESHOLD_MS
   }
 
@@ -691,7 +700,14 @@
               @keydown.space.prevent="seekLine(line)"
               @keyup.space.prevent
             >
-              <span class="lyric-original">{{ line.text }}</span>
+              <span class="lyric-original">
+                <VerbatimText
+                  v-if="line.words?.length"
+                  :words="line.words"
+                  :clock="getLyricClock"
+                />
+                <template v-else>{{ line.text }}</template>
+              </span>
               <Transition name="translation-toggle">
                 <span v-if="line.translation" class="lyric-translation">{{
                   line.translation

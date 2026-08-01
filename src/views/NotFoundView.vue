@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { RouterLink, useRoute } from 'vue-router'
-  import { Home } from '@lucide/vue'
+  import TappIcon from '../components/TappIcon.vue'
 
   const route = useRoute()
   const missingPath = computed(() => route.fullPath || '/')
@@ -14,7 +14,7 @@
       <h1 id="not-found-title">页面不存在</h1>
       <p class="not-found-copy">{{ missingPath }} 没有找到对应内容。</p>
       <RouterLink class="home-action" to="/">
-        <Home :size="18" />
+        <TappIcon name="home" :size="18" />
         <span>返回播放器</span>
       </RouterLink>
     </section>

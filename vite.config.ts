@@ -17,7 +17,7 @@ export default defineConfig({
         inlineDynamicImports: true,
         entryFileNames: 'main.js',
         assetFileNames: (assetInfo) =>
-          assetInfo.name && assetInfo.name.endsWith('.css') ? 'styles.css' : 'assets/[name][extname]',
+          assetInfo.name && assetInfo.name.endsWith('.css') ? 'page.css' : 'assets/[name][extname]',
       },
     },
   },

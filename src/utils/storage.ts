@@ -1,4 +1,8 @@
-// 安全的 localStorage 包装：所有读写均 try/catch，避免 Safari Private 模式 / quota 满 / SSR 等场景下抛异常
+// 安全的存储包装:Tapp 宿主内走 Tapp.storage 内存镜像(见 tapp/storage.ts),
+// 否则回退 localStorage;所有读写均 try/catch,避免 Safari Private 模式 /
+// quota 满 / SSR / 沙箱禁用存储等场景下抛异常
+import { hasTappStorage, tappStorageGet, tappStorageRemove, tappStorageSet } from '../tapp/storage'
+
 function getStorage(): Storage | null {
   // 先用 typeof 判断，兼容 SSR 与 jsdom 等无 window 的边界场景
   if (typeof window === 'undefined') return null
@@ -12,6 +16,7 @@ function getStorage(): Storage | null {
 
 export const safeStorage = {
   getItem(key: string): string | null {
+    if (hasTappStorage()) return tappStorageGet(key)
     const storage = getStorage()
     if (!storage) return null
     try {
@@ -22,6 +27,10 @@ export const safeStorage = {
     }
   },
   setItem(key: string, value: string): void {
+    if (hasTappStorage()) {
+      tappStorageSet(key, value)
+      return
+    }
     const storage = getStorage()
     if (!storage) return
     try {
@@ -31,6 +40,10 @@ export const safeStorage = {
     }
   },
   removeItem(key: string): void {
+    if (hasTappStorage()) {
+      tappStorageRemove(key)
+      return
+    }
     const storage = getStorage()
     if (!storage) return
     try {

@@ -90,6 +90,14 @@ declare const Tapp:
         onReady(callback: () => void): void
         onDestroy?(callback: () => void): void
       }
+      storage?: {
+        get(key: string): Promise<unknown>
+        set(key: string, value: unknown): Promise<void>
+        remove(key: string): Promise<void>
+        keys?(): Promise<string[]>
+        getAll?(): Promise<Record<string, unknown>>
+        clear?(): Promise<void>
+      }
     }
   | undefined
 

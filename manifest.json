@@ -20,7 +20,7 @@
   "icon": "🎵",
   "themeColor": "#151318",
   "category": "media",
-  "permissions": ["media:read", "media:control"],
+  "permissions": ["media:read", "media:control", "storage"],
   "homepage": "https://music.abloom.site",
   "repository": "https://github.com/abloom25/MelioraTapp"
 }

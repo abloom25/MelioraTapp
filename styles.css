@@ -1,0 +1,270 @@
+/* Meliora Tapp — 页面样式。深色纯黑系 + 封面模糊背景 + 节拍呼吸(--mel-beat) */
+
+.mel-app {
+  --mel-beat: 0;
+
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #0a0a0a;
+  color: #fff;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.mel-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.mel-bg-img {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  object-fit: cover;
+  filter: blur(48px) saturate(1.2) brightness(calc(0.82 + var(--mel-beat) * 0.18));
+  opacity: calc(0.55 + var(--mel-beat) * 0.2);
+  transform: scale(calc(1.04 + var(--mel-beat) * 0.015));
+  transition:
+    filter 90ms linear,
+    opacity 90ms linear,
+    transform 90ms linear;
+}
+
+.mel-bg-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.35), rgba(10, 10, 12, 0.88));
+}
+
+.mel-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 72px 20px 24px;
+  box-sizing: border-box;
+}
+
+.mel-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mel-cover {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.mel-meta {
+  min-width: 0;
+}
+
+.mel-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mel-artist {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mel-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.mel-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  transition: width 200ms linear;
+}
+
+.mel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.mel-btn {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  place-items: center;
+  transition: background 150ms ease;
+}
+
+.mel-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mel-btn-primary {
+  width: 54px;
+  height: 54px;
+  background: #fff;
+  color: #151318;
+  font-size: 18px;
+}
+
+.mel-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.mel-lyrics {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 4px 32vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+}
+
+.mel-lyrics::-webkit-scrollbar {
+  display: none;
+}
+
+.mel-line {
+  --fade: 1;
+
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, calc(0.3 + (5 - var(--fade)) * 0.08));
+  font-family: inherit;
+  font-size: clamp(20px, 4.6vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 400ms ease,
+    opacity 400ms ease,
+    filter 400ms ease;
+}
+
+.mel-line.d0 {
+  --fade: 0;
+}
+.mel-line.d1 {
+  --fade: 1;
+}
+.mel-line.d2 {
+  --fade: 2;
+}
+.mel-line.d3 {
+  --fade: 3;
+}
+.mel-line.d4 {
+  --fade: 4;
+}
+.mel-line.d5 {
+  --fade: 5;
+}
+
+.mel-line:not(.on) {
+  opacity: calc(0.75 - var(--fade) * 0.09);
+  filter: blur(calc(var(--fade) * 0.6px));
+}
+
+.mel-line.on {
+  color: #fff;
+  opacity: 1;
+  filter: blur(0);
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.2),
+    0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.mel-word {
+  transition: color 180ms ease;
+}
+
+.mel-line.on .mel-word.on {
+  color: #fff;
+}
+
+.mel-line.on .mel-word:not(.on) {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.mel-translation {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.68em;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.mel-lyrics-state {
+  padding: 32px 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  text-align: center;
+}
+
+.mel-lyrics-state:empty {
+  display: none;
+}
+
+.mel-viz {
+  display: flex;
+  height: 22px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+
+.mel-viz-bar {
+  width: 3px;
+  height: 12%;
+  min-height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .mel-main {
+    padding-top: 56px;
+  }
+}

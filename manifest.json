@@ -12,7 +12,7 @@
   "main": "main.js",
   "styles": "styles.css",
   "hasPage": true,
-  "pageModules": ["player.js"],
+  "pageTemplate": "page.html",
   "author": {
     "name": "abloom25",
     "url": "https://github.com/abloom25"

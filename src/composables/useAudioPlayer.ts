@@ -29,6 +29,14 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   const preloadMessage = ref('')
   const unsubscribers: Array<() => void> = []
   let started = false
+  // 手动 seek 后的抑制窗口:宿主可能先发一两帧旧位置的进度,
+  // 直接采纳会把乐观更新打回旧值,表现为进度条回跳
+  let lastSeekAt = 0
+  let lastSeekTarget = 0
+
+  function isStaleSeekTick(position: number): boolean {
+    return performance.now() - lastSeekAt < 800 && Math.abs(position - lastSeekTarget) > 2
+  }
 
   function findHostTrack(host: NonNullable<HostStatus['currentTrack']>): Track | null {
     return (
@@ -55,7 +63,8 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
     if (store.currentTrackId !== wasTrackId) {
       void beat.reloadBeatGrid()
     }
-    if (typeof status.position === 'number') store.currentTime = status.position
+    if (typeof status.position === 'number' && !isStaleSeekTick(status.position))
+      store.currentTime = status.position
     if (typeof status.duration === 'number') store.duration = status.duration
   }
 
@@ -66,6 +75,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
     unsubscribers.push(hostMedia.onStateChange(applyStatus))
     unsubscribers.push(
       hostMedia.onProgress((progress) => {
+        if (isStaleSeekTick(progress.current)) return
         store.currentTime = progress.current
         if (progress.duration > 0) store.duration = progress.duration
       }),
@@ -108,7 +118,12 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   }
 
   async function seek(seconds: number) {
-    await hostMedia.seek(Math.max(0, seconds))
+    const target = Math.max(0, seconds)
+    // 乐观更新:立即落 store,不等宿主回包,否则松手后进度条停在旧位置"卡一下"
+    lastSeekAt = performance.now()
+    lastSeekTarget = target
+    store.currentTime = target
+    await hostMedia.seek(target)
   }
 
   async function next() {

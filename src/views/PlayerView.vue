@@ -13,7 +13,6 @@
   import { usePwaInstall } from '../composables/usePwaInstall'
   import { useSleepTimer } from '../composables/useSleepTimer'
   import { useThemeAccent } from '../composables/useThemeAccent'
-  import { useFullscreen } from '../composables/useFullscreen'
   import { useChromeAutoHide } from '../composables/useChromeAutoHide'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useCoverCache } from '../composables/useCoverCache'
@@ -83,11 +82,6 @@
   // Theme accent composable
   const { accent, accentSoft, accentRgb, applyTheme, resetTheme, cssTransitionSupported } =
     useThemeAccent()
-
-  // Fullscreen composable
-  const { fullscreenActive, fullscreenSupported, toggleFullscreenMode } = useFullscreen({
-    onShowNotice: showNotice,
-  })
 
   // VIP 歌曲开关(对齐官方 music-player):内部用 skip 语义,true=跳过 VIP(系统默认),
   // 按钮高亮=允许播放 VIP;读写经宿主 getSkipVip/setSkipVip
@@ -969,8 +963,6 @@
           :sleep-timer-options="sleepTimerOptions"
           :format-sleep-timer-remaining="formatSleepTimerRemaining"
           :portable-device="portableDevice"
-          :fullscreen-active="fullscreenActive"
-          :fullscreen-supported="fullscreenSupported"
           :can-install="canInstall"
           :is-installed="isInstalled"
           :ios-install-available="iosInstallAvailable"
@@ -978,7 +970,6 @@
           @toggle-vip-playback="toggleVipPlayback"
           @sleep-timer-input="handleSleepTimerInput"
           @sleep-timer-change="handleSleepTimerChange"
-          @toggle-fullscreen-mode="toggleFullscreenMode"
           @install-pwa="installPwa"
           @show-ios-install-guide="showIosInstallGuide"
         />

@@ -21,8 +21,6 @@
     sleepTimerOptions: readonly number[]
     formatSleepTimerRemaining: (value: number) => string
     portableDevice: boolean
-    fullscreenActive: boolean
-    fullscreenSupported: boolean
     canInstall: boolean
     isInstalled: boolean
     iosInstallAvailable: boolean
@@ -35,7 +33,6 @@
     toggleVipPlayback: []
     sleepTimerInput: [value: number]
     sleepTimerChange: [value: number]
-    toggleFullscreenMode: []
     installPwa: []
     showIosInstallGuide: []
   }>()
@@ -95,17 +92,6 @@
       <div class="setting-row toggle-row">
         <span><strong>自动隐藏上下控件</strong><small>鼠标闲置 30 秒后只保留歌曲内容</small></span>
         <ToggleSwitch v-model="settings.autoHideChrome" aria-label="自动隐藏上下控件" />
-      </div>
-      <div v-if="!portableDevice && fullscreenSupported" class="setting-row toggle-row">
-        <span
-          ><strong>全屏模式</strong
-          ><small>{{ fullscreenActive ? '已进入全屏' : '让播放器占满整个屏幕' }}</small></span
-        >
-        <ToggleSwitch
-          :model-value="fullscreenActive"
-          aria-label="全屏模式"
-          @update:model-value="emit('toggleFullscreenMode')"
-        />
       </div>
       <div class="setting-group">
         <div class="setting-group-label">

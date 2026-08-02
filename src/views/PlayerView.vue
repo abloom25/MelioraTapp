@@ -641,18 +641,6 @@
     <header class="topbar" @click="onTopbarClick">
       <div class="top-actions">
         <span v-if="sourceWarning" class="source-warning">{{ sourceWarning }}</span>
-        <button
-          class="nav-button settings-button"
-          :class="{ active: settingsOpen && settingsAvailable }"
-          :aria-label="
-            settingsAvailable ? (settingsOpen ? '关闭设置' : '打开设置') : '暂无歌曲,设置不可用'
-          "
-          :title="settingsAvailable ? '设置' : '暂无歌曲,设置不可用'"
-          :disabled="!settingsAvailable"
-          @click="toggleSettings"
-        >
-          <TappIcon name="settings" :size="19" />
-        </button>
       </div>
     </header>
 
@@ -774,6 +762,17 @@
           >
             <TappIcon name="lyrics" :size="20" />
           </button>
+          <button
+            :class="{ active: settingsOpen && settingsAvailable }"
+            :aria-label="
+              settingsAvailable ? (settingsOpen ? '关闭设置' : '打开设置') : '暂无歌曲,设置不可用'
+            "
+            :title="settingsAvailable ? '设置' : '暂无歌曲,设置不可用'"
+            :disabled="!settingsAvailable"
+            @click="toggleSettings"
+          >
+            <TappIcon name="settings" :size="20" />
+          </button>
         </div>
       </div>
     </section>
@@ -827,6 +826,17 @@
           @click="toggleLyrics"
         >
           <TappIcon name="lyrics" :size="19" />
+        </button>
+        <button
+          :class="{ active: settingsOpen && settingsAvailable }"
+          :aria-label="
+            settingsAvailable ? (settingsOpen ? '关闭设置' : '打开设置') : '暂无歌曲,设置不可用'
+          "
+          :title="settingsAvailable ? '设置' : '暂无歌曲,设置不可用'"
+          :disabled="!settingsAvailable"
+          @click="toggleSettings"
+        >
+          <TappIcon name="settings" :size="19" />
         </button>
       </div>
     </footer>

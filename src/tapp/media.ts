@@ -79,6 +79,9 @@ interface HostMedia {
   unmute?(): Promise<void>
   setMode?(mode: string): Promise<void>
   playTrack?(trackId: string, trackIndex?: number): Promise<void>
+  // 跳转到播放列表指定位置(正常列表播放,同步列表游标);
+  // playTrack 是临时播放,不更新列表状态——官方 music-player 点歌走 jumpToIndex
+  jumpToIndex?(index: number): Promise<void>
   getStatus(): Promise<HostStatus>
   getPlaylist?(): Promise<HostPlaylistResult>
   getLyrics(args?: { songId?: string | number; source?: string }): Promise<HostLyricsResult>
@@ -136,6 +139,9 @@ export const hostMedia = {
   setMode: (mode: string) => (api()!.setMode ? api()!.setMode!(mode) : Promise.resolve()),
   playTrack: (trackId: string, trackIndex?: number) =>
     api()!.playTrack ? api()!.playTrack!(trackId, trackIndex) : Promise.resolve(),
+  hasJumpToIndex: () => Boolean(api()?.jumpToIndex),
+  jumpToIndex: (index: number) =>
+    api()!.jumpToIndex ? api()!.jumpToIndex!(index) : Promise.resolve(),
   getStatus: () => api()!.getStatus(),
   hasSpectrum: () => Boolean(api()?.getSpectrum),
   mute: () => (api()!.mute ? api()!.mute!() : Promise.resolve()),

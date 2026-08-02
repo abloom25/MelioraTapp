@@ -120,9 +120,18 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   }
 
   async function selectAndPlay(track: Track, _queue?: Track[]) {
+    // 与官方一致:优先 jumpToIndex 移动宿主播放列表游标(playTrack 是临时播放,
+    // 不同步列表状态)。索引取曲目在完整宿主歌单(store.tracks)中的位置,
+    // 不能用传入队列——搜索过滤后的队列位置与宿主歌单不一致
+    const index = store.tracks.indexOf(track)
+    if (index >= 0 && hostMedia.hasJumpToIndex()) {
+      await hostMedia.jumpToIndex(index)
+      return
+    }
+    // 旧宿主无 jumpToIndex,或曲目不在当前歌单:退回临时播放
     const numericId = track.id.startsWith('host:') ? track.id.slice(5) : track.id
-    const index = store.queue.indexOf(track)
-    await hostMedia.playTrack(numericId, index >= 0 ? index : undefined)
+    const queueIndex = store.queue.indexOf(track)
+    await hostMedia.playTrack(numericId, queueIndex >= 0 ? queueIndex : undefined)
   }
 
   onBeforeUnmount(() => {

@@ -2,8 +2,8 @@
   import { computed } from 'vue'
   import type { LyricWord } from '../types/music'
 
-  // 逐字(卡拉OK)歌词行,Apple Music 风格:正在唱的词立即整词点亮,
-  // 唱过保持亮,未唱保持暗,词与词之间跳变(不做词内渐变扫过)。
+  // 逐字(卡拉OK)歌词行,Apple Music 风格:
+  // 正在唱的词整词点亮并轻微上浮,唱完落回基线保持亮,未唱保持暗。
   // 时钟以函数 prop 传入,读取发生在本组件的 computed 内,
   // 因此 60fps 的时钟更新只重渲染本行,不触发整个歌词面板重渲染。
   const props = defineProps<{
@@ -12,18 +12,22 @@
     clock: () => number
   }>()
 
+  type WordState = 'pending' | 'current' | 'sung'
+
   interface WordView {
     text: string
-    sung: boolean
+    state: WordState
   }
 
   const views = computed<WordView[]>(() => {
-    const time = props.clock()
-    return props.words.map((word) => ({
-      text: word.text,
-      // 到词起始时间即点亮(略提前 80ms,抵消人眼对音频/渲染的感知延迟)
-      sung: time >= word.time - 0.08,
-    }))
+    // 略提前 80ms,抵消人眼对音频/渲染的感知延迟
+    const time = props.clock() + 0.08
+    return props.words.map((word) => {
+      let state: WordState = 'pending'
+      if (time >= word.time + word.duration) state = 'sung'
+      else if (time >= word.time) state = 'current'
+      return { text: word.text, state }
+    })
   })
 </script>
 
@@ -33,7 +37,7 @@
       v-for="(word, index) in views"
       :key="index"
       class="lyric-word"
-      :class="{ pending: !word.sung }"
+      :class="word.state"
       >{{ word.text }}</span
     >
   </span>
@@ -41,11 +45,18 @@
 
 <style scoped lang="scss">
   .lyric-word {
+    display: inline-block;
     color: #fff;
-    // 词边界处的明暗跳变加短过渡,避免生硬闪烁
-    transition: color 0.18s ease;
+    transform: translateY(0);
+    transition:
+      transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.18s ease;
   }
   .lyric-word.pending {
     color: rgba(255, 255, 255, 0.43);
+  }
+  // Apple Music 味道:正在唱的词轻微上浮,唱完落回
+  .lyric-word.current {
+    transform: translateY(-0.08em);
   }
 </style>

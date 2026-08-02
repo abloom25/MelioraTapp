@@ -20,26 +20,10 @@ export interface LocalTrackConfig {
   lyrics?: string
 }
 
-export interface UmamiConfig {
-  enabled?: boolean
-  scriptUrl?: string
-  websiteId?: string
-}
-
-export interface GoogleAnalyticsConfig {
-  enabled?: boolean
-  measurementId?: string
-}
-
 export interface PublicMusicConfig {
   siteName: string
   siteIcon?: string
   apiEndpoint: string
-  umami?: UmamiConfig
-  googleAnalytics?: GoogleAnalyticsConfig
-  googleSiteVerification?: string
-  customCss?: string
-  customJs?: string
   playlists: MetingPlaylistConfig[]
   localTracks: LocalTrackConfig[]
 }
@@ -72,7 +56,6 @@ export interface Track {
   id: string
   title: string
   titleVersions?: string[]
-  shareAliases?: string[]
   artist: string
   album?: string
   cover?: string

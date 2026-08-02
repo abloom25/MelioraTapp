@@ -1,10 +1,8 @@
 import type {
-  GoogleAnalyticsConfig,
   LocalTrackConfig,
   MetingPlaylistConfig,
   MusicConfig,
   MusicServer,
-  UmamiConfig,
 } from '../src/types/music'
 import { isPublicHttpsUrl, isValidUrl } from './utils/url-validation'
 import { CONFIG_LIMITS } from './constants'
@@ -93,61 +91,6 @@ export function validateMusicConfig(
     typeof config.receivePrereleaseUpdates !== 'boolean'
   ) {
     errors.push('receivePrereleaseUpdates 必须是布尔值')
-  }
-
-  if (config.umami !== undefined) {
-    if (!isObject(config.umami)) {
-      errors.push('umami 必须是对象')
-    } else {
-      const umami = config.umami
-      if (umami.enabled !== undefined && typeof umami.enabled !== 'boolean') {
-        errors.push('umami.enabled 必须是布尔值')
-      }
-      if (umami.scriptUrl !== undefined && typeof umami.scriptUrl !== 'string') {
-        errors.push('umami.scriptUrl 必须是字符串')
-      } else if (typeof umami.scriptUrl === 'string' && umami.scriptUrl.trim()) {
-        if (requirePublicHttps && !isPublicHttpsUrl(umami.scriptUrl)) {
-          errors.push('生产环境 umami.scriptUrl 必须是公网 https URL')
-        } else if (!isValidUrl(umami.scriptUrl)) {
-          errors.push('umami.scriptUrl 必须是有效的 http(s) URL')
-        }
-      }
-      if (umami.websiteId !== undefined && typeof umami.websiteId !== 'string') {
-        errors.push('umami.websiteId 必须是字符串')
-      }
-    }
-  }
-
-  if (config.googleAnalytics !== undefined) {
-    if (!isObject(config.googleAnalytics)) {
-      errors.push('googleAnalytics 必须是对象')
-    } else {
-      const googleAnalytics = config.googleAnalytics
-      if (googleAnalytics.enabled !== undefined && typeof googleAnalytics.enabled !== 'boolean') {
-        errors.push('googleAnalytics.enabled 必须是布尔值')
-      }
-      if (
-        googleAnalytics.measurementId !== undefined &&
-        typeof googleAnalytics.measurementId !== 'string'
-      ) {
-        errors.push('googleAnalytics.measurementId 必须是字符串')
-      }
-    }
-  }
-
-  if (
-    config.googleSiteVerification !== undefined &&
-    typeof config.googleSiteVerification !== 'string'
-  ) {
-    errors.push('googleSiteVerification 必须是字符串')
-  }
-
-  if (config.customCss !== undefined && typeof config.customCss !== 'string') {
-    errors.push('customCss 必须是字符串')
-  }
-
-  if (config.customJs !== undefined && typeof config.customJs !== 'string') {
-    errors.push('customJs 必须是字符串')
   }
 
   if (!Array.isArray(config.playlists)) {
@@ -250,28 +193,6 @@ export function validateMusicConfig(
   if (typeof config.githubProxy === 'string') cleaned.githubProxy = config.githubProxy
   if (typeof config.receivePrereleaseUpdates === 'boolean') {
     cleaned.receivePrereleaseUpdates = config.receivePrereleaseUpdates
-  }
-  if (typeof config.googleSiteVerification === 'string') {
-    cleaned.googleSiteVerification = config.googleSiteVerification
-  }
-  if (typeof config.customCss === 'string') cleaned.customCss = config.customCss
-  if (typeof config.customJs === 'string') cleaned.customJs = config.customJs
-
-  if (isObject(config.umami)) {
-    const umami: UmamiConfig = {}
-    const u = config.umami
-    if (typeof u.enabled === 'boolean') umami.enabled = u.enabled
-    if (typeof u.scriptUrl === 'string') umami.scriptUrl = u.scriptUrl
-    if (typeof u.websiteId === 'string') umami.websiteId = u.websiteId
-    cleaned.umami = umami
-  }
-
-  if (isObject(config.googleAnalytics)) {
-    const googleAnalytics: GoogleAnalyticsConfig = {}
-    const g = config.googleAnalytics
-    if (typeof g.enabled === 'boolean') googleAnalytics.enabled = g.enabled
-    if (typeof g.measurementId === 'string') googleAnalytics.measurementId = g.measurementId
-    cleaned.googleAnalytics = googleAnalytics
   }
 
   return { valid: true, config: cleaned, errors: [] }

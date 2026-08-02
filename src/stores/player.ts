@@ -143,7 +143,6 @@ export const usePlayerStore = defineStore('player', () => {
           if (track.id !== activeTrack.id) return track
           transferTrackLyricsProvider(track, activeTrack)
           delete activeTrack.titleVersions
-          delete activeTrack.shareAliases
           delete activeTrack.album
           delete activeTrack.cover
           Object.assign(activeTrack, track)

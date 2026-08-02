@@ -7,18 +7,9 @@ export function useDeviceDetection() {
   const compactViewport = ref(false)
   const portableDevice = ref(false)
   const phoneDevice = ref(false)
-  const lyricsWindowSupported = ref(true)
 
   let compactViewportQuery: MediaQueryList | undefined
   let stopCompactViewportListener: (() => void) | null = null
-
-  function supportsDesktopLyricsWindow() {
-    const userAgent = navigator.userAgent.toLowerCase()
-    const mobileAgent = /android|iphone|ipad|ipod|mobile|tablet|kindle|silk/.test(userAgent)
-    const touchMacTablet = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
-    const coarseTouchOnly = window.matchMedia('(hover: none) and (pointer: coarse)').matches
-    return !(mobileAgent || touchMacTablet || coarseTouchOnly)
-  }
 
   const viewportMode = computed<PlayerViewportMode>(() => {
     if (phoneDevice.value || compactViewport.value) return 'mobile-sheet'
@@ -51,7 +42,6 @@ export function useDeviceDetection() {
 
   onMounted(() => {
     compactViewportQuery = window.matchMedia('(max-width: 720px)')
-    lyricsWindowSupported.value = supportsDesktopLyricsWindow()
     updateCompactViewport(compactViewportQuery)
     updateDeviceKind()
     stopCompactViewportListener = listenMediaQuery(compactViewportQuery, updateCompactViewport)
@@ -68,7 +58,6 @@ export function useDeviceDetection() {
     compactViewport,
     portableDevice,
     phoneDevice,
-    lyricsWindowSupported,
     viewportMode,
     isMobileSheet,
   }

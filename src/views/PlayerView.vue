@@ -5,18 +5,15 @@
   import { hasTrackLyricsSource } from '../services/lyrics'
   import { loadConfiguredTracks, loadMusicConfig } from '../services/music'
   import { usePlayerStore } from '../stores/player'
-  import { filterTracks, trackMatchesShareId } from '../utils/tracks'
-  import { applySiteIntegrations } from '../utils/site-integrations'
+  import { filterTracks } from '../utils/tracks'
   import { extractThemeColor, type ThemeColor } from '../utils/theme'
   import { isInteractiveElement } from '../utils/dom'
   import { useAudioPlayer } from '../composables/useAudioPlayer'
-  import { useLyricsWindow } from '../composables/useLyricsWindow'
   import { usePwaInstall } from '../composables/usePwaInstall'
   import { useSleepTimer } from '../composables/useSleepTimer'
   import { useThemeAccent } from '../composables/useThemeAccent'
   import { useFullscreen } from '../composables/useFullscreen'
   import { useChromeAutoHide } from '../composables/useChromeAutoHide'
-  import { useTrackShare } from '../composables/useTrackShare'
   import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
   import { useCoverCache } from '../composables/useCoverCache'
   import { useFocusTrap } from '../composables/useFocusTrap'
@@ -42,8 +39,7 @@
 
   const { triggerHaptic, withHaptic } = useHaptic()
 
-  const { compactViewport, portableDevice, phoneDevice, lyricsWindowSupported, isMobileSheet } =
-    useDeviceDetection()
+  const { compactViewport, portableDevice, phoneDevice, isMobileSheet } = useDeviceDetection()
 
   const store = usePlayerStore()
   const { currentTrack, currentTrackId, currentTime, duration, isPlaying, settings, tracks } =
@@ -66,14 +62,6 @@
   const nextWithHaptic = withHaptic(next, 'selection')
   const cyclePlayModeWithHaptic = withHaptic(store.cyclePlayMode, 'heavy')
 
-  const {
-    isOpen: lyricsWindowOpen,
-    setSnapshot: setLyricsWindowSnapshot,
-    toggleLyricsWindow,
-  } = useLyricsWindow({
-    currentTrack,
-    isPlaying,
-  })
   const { canInstall, isInstalled, install, iosInstallAvailable } = usePwaInstall()
 
   // Sleep Timer composable
@@ -97,13 +85,6 @@
 
   // Fullscreen composable
   const { fullscreenActive, fullscreenSupported, toggleFullscreenMode } = useFullscreen({
-    onShowNotice: showNotice,
-  })
-
-  // Track share composable
-  const { shareCurrentTrack } = useTrackShare({
-    currentTrack,
-    onTriggerHaptic: triggerHaptic,
     onShowNotice: showNotice,
   })
 
@@ -353,20 +334,9 @@
       const config = loadMusicConfig()
       runtimeConfig.value = config
       applySiteBrand(config)
-      applySiteIntegrations(config)
       const result = await loadConfiguredTracks(config)
       if (requestId !== loadTracksRequestId) return
       store.setTracks(result.tracks)
-      const url = new URL(window.location.href)
-      const sharedTrackId = url.searchParams.get('share')
-      const sharedTrack = sharedTrackId
-        ? store.tracks.find((track) => trackMatchesShareId(track, sharedTrackId))
-        : null
-      if (sharedTrack) store.selectTrack(sharedTrack, store.tracks)
-      if (sharedTrackId) {
-        url.searchParams.delete('share')
-        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}`)
-      }
       failedSources.value = result.failedSources
       if (result.failedSources) {
         sourceWarning.value = `${result.failedSources} 个音乐源暂时无法载入`
@@ -516,19 +486,6 @@
     }
   }
 
-  async function openLyricsWindow() {
-    if (!lyricsWindowSupported.value) {
-      showNotice('手机和平板暂不支持歌词小窗')
-      return
-    }
-
-    try {
-      await toggleLyricsWindow()
-    } catch {
-      showNotice('浏览器阻止了歌词小窗，请允许弹出窗口')
-    }
-  }
-
   async function installPwa() {
     const installed = await install()
     showNotice(installed ? 'Meliora 已安装' : '已取消安装')
@@ -541,7 +498,6 @@
 
   function handleLyricsSnapshot(snapshot: LyricsSnapshot) {
     lyricsSnapshot.value = snapshot
-    setLyricsWindowSnapshot(snapshot)
   }
 
   async function handleMainCoverLoaded(trackId: string, event: Event) {
@@ -685,15 +641,6 @@
     <header class="topbar" @click="onTopbarClick">
       <div class="top-actions">
         <span v-if="sourceWarning" class="source-warning">{{ sourceWarning }}</span>
-        <button
-          class="nav-button share-button"
-          aria-label="分享当前歌曲"
-          title="分享歌曲"
-          :disabled="!currentTrack"
-          @click="shareCurrentTrack"
-        >
-          <TappIcon name="share" :size="19" />
-        </button>
         <button
           class="nav-button settings-button"
           :class="{ active: settingsOpen && settingsAvailable }"
@@ -994,9 +941,6 @@
           :portable-device="portableDevice"
           :fullscreen-active="fullscreenActive"
           :fullscreen-supported="fullscreenSupported"
-          :lyrics-window-supported="lyricsWindowSupported"
-          :lyrics-window-open="lyricsWindowOpen"
-          :has-current-track="Boolean(currentTrack)"
           :can-install="canInstall"
           :is-installed="isInstalled"
           :ios-install-available="iosInstallAvailable"
@@ -1004,7 +948,6 @@
           @sleep-timer-input="handleSleepTimerInput"
           @sleep-timer-change="handleSleepTimerChange"
           @toggle-fullscreen-mode="toggleFullscreenMode"
-          @open-lyrics-window="openLyricsWindow"
           @install-pwa="installPwa"
           @show-ios-install-guide="showIosInstallGuide"
         />

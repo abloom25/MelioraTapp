@@ -22,9 +22,6 @@
     portableDevice: boolean
     fullscreenActive: boolean
     fullscreenSupported: boolean
-    lyricsWindowSupported: boolean
-    lyricsWindowOpen: boolean
-    hasCurrentTrack: boolean
     canInstall: boolean
     isInstalled: boolean
     iosInstallAvailable: boolean
@@ -37,7 +34,6 @@
     sleepTimerInput: [value: number]
     sleepTimerChange: [value: number]
     toggleFullscreenMode: []
-    openLyricsWindow: []
     installPwa: []
     showIosInstallGuide: []
   }>()
@@ -125,25 +121,6 @@
         <span><strong>进度条歌词预览</strong><small>悬停进度条时显示对应时间的歌词</small></span>
         <ToggleSwitch v-model="settings.progressLyricPreview" aria-label="进度条歌词预览" />
       </div>
-      <button
-        v-if="lyricsWindowSupported"
-        class="setting-row window-setting-row"
-        :class="{ active: lyricsWindowOpen }"
-        :disabled="!hasCurrentTrack"
-        @click="emit('openLyricsWindow')"
-      >
-        <span>
-          <strong>歌词小窗</strong>
-          <small>{{
-            lyricsWindowOpen
-              ? '小窗已打开'
-              : hasCurrentTrack
-                ? '在独立小窗中显示歌曲与歌词'
-                : '选择歌曲后可用'
-          }}</small>
-        </span>
-        <TappIcon name="pip" :size="20" />
-      </button>
       <button
         v-if="canInstall && !isInstalled"
         class="setting-row install-row"
@@ -369,25 +346,6 @@
   }
   .install-row svg {
     flex: 0 0 auto;
-  }
-  .window-setting-row {
-    width: 100%;
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.72);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .window-setting-row.active {
-    color: rgba(255, 255, 255, 0.92);
-    background: rgba(var(--accent-rgb), 0.1);
-  }
-  .window-setting-row:disabled {
-    color: rgba(255, 255, 255, 0.22);
-    cursor: default;
   }
   .value-button {
     padding: 7px 10px;

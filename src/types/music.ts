@@ -64,6 +64,9 @@ export interface Track {
   /** Myriad 宿主曲目的取词参数(getLyrics 的 songId/source) */
   songId?: string | number
   source?: string
+  /** 宿主标记:VIP 歌曲 / 仅可试听 */
+  isVip?: boolean
+  isTrial?: boolean
 }
 
 export interface MetingTrack {

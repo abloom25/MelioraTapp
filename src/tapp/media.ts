@@ -13,6 +13,8 @@ export interface HostTrack {
   cover?: string
   album?: string
   source?: 'netease' | 'qq' | 'kugou' | string
+  isVip?: boolean
+  isTrial?: boolean
 }
 
 // 宿主实际返回 { tracks: [...] } 包装对象,旧版本返回裸数组,两种都要兼容

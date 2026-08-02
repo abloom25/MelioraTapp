@@ -25,7 +25,7 @@ export async function loadConfiguredTracks(_config?: PublicMusicConfig): Promise
 }
 
 function mapPlaylistTrack(
-  track: { id?: string; songId?: string | number; title?: string; name?: string; artist?: string; cover?: string; album?: string; source?: string },
+  track: { id?: string; songId?: string | number; title?: string; name?: string; artist?: string; cover?: string; album?: string; source?: string; isVip?: boolean; isTrial?: boolean },
   index: number,
 ): Track {
   return {
@@ -38,6 +38,8 @@ function mapPlaylistTrack(
     kind: 'host',
     songId: track.songId,
     source: track.source,
+    isVip: track.isVip || undefined,
+    isTrial: track.isTrial || undefined,
   }
 }
 

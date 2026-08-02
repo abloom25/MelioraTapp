@@ -283,6 +283,8 @@
           <span class="track-copy">
             <strong>
               <span class="track-title-main">{{ display.title }}</span>
+              <span v-if="track.isVip" class="track-badge vip">VIP</span>
+              <span v-else-if="track.isTrial" class="track-badge trial">试听</span>
               <span v-if="display.versions.length" class="track-title-versions">
                 <span
                   v-for="version in display.versions"
@@ -588,6 +590,27 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    // VIP/试听徽标,对齐官方 music-player 的金色 VIP 标
+    .track-badge {
+      flex: 0 0 auto;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.5;
+    }
+
+    .track-badge.vip {
+      background: linear-gradient(135deg, #ffd700, #ffa500);
+      color: rgba(0, 0, 0, 0.72);
+    }
+
+    .track-badge.trial {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: rgba(255, 255, 255, 0.72);
     }
 
     .track-title-versions {

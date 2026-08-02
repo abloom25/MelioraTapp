@@ -3,14 +3,14 @@ import { hostMedia, type HostBeatGrid } from '../tapp/media'
 
 // 节拍可视化驱动:接口与主仓 useBeatAnalyser 完全一致
 // ({ beatLevel, spectrumLevels, startBeatAnalysis, stopBeatAnalysis }),
-// 数据源改为宿主 getBeatGrid(离线网格,优先)+ getSpectrum(实时频谱)。
+// 数据源改为宿主 getBeatGrid(离线网格,优先)+ getSpectrum(实时频谱,
+// 优先 4 通道 spectrum,无则 8 频段 bands 两两合并)。
 // 音频图相关参数(players/EQ/CORS)在 Tapp 版不存在,保留签名兼容调用方。
 
 const SPECTRUM_POLL_MS = 66 // ~15fps 拉取宿主频谱(postMessage 有成本)
 const GRID_MIN_CONFIDENCE = 0.5
-const BAND_COUNT = 5
-// 宿主 8 频段 → 主仓五段(sub/low/mid/high/air)映射
-const BAND_MAP: number[][] = [[0], [1, 2], [3, 4], [5, 6], [7]]
+// 宿主 spectrum 通道数:为简单柱状视觉重排的 4 柱数据(低-高-高-低对称)
+const BAND_COUNT = 4
 
 function smoothingAlpha(dtSeconds: number, tauSeconds: number) {
   return 1 - Math.exp(-dtSeconds / tauSeconds)
@@ -135,12 +135,20 @@ export function useBeatAnalyser(options: BeatAnalyserOptions) {
     if (!isRunning) return
     try {
       const data = await hostMedia.getSpectrum()
-      if (!data || !Array.isArray(data.bands)) return
+      if (!data) return
+      // 优先宿主为柱状视觉重排的 4 通道 spectrum;旧宿主无此字段时 8 频段两两合并
+      const four =
+        Array.isArray(data.spectrum) && data.spectrum.length >= BAND_COUNT
+          ? data.spectrum.slice(0, BAND_COUNT)
+          : Array.isArray(data.bands) && data.bands.length >= 8
+            ? [0, 2, 4, 6].map(
+                (i) => ((Number(data.bands![i]) || 0) + (Number(data.bands![i + 1]) || 0)) / 2,
+              )
+            : null
+      if (!four) return
       const dt = SPECTRUM_POLL_MS / 1000
       const next = spectrumLevels.value.map((_, band) => {
-        const indices = BAND_MAP[band] ?? [band]
-        const target =
-          indices.reduce((sum, i) => sum + (Number(data.bands![i]) || 0), 0) / indices.length
+        const target = Number(four[band]) || 0
         const previous = bandLevels[band]!
         const tau = target > previous ? 0.05 : 0.22
         const level = previous + (target - previous) * smoothingAlpha(dt, tau)
@@ -152,7 +160,7 @@ export function useBeatAnalyser(options: BeatAnalyserOptions) {
 
       // 无节拍网格时退回低频能量驱动脉冲
       if (!beatGrid.available) {
-        const bass = Number(data.bass) || Number(data.bands[0]) || 0
+        const bass = Number(data.bass) || Number(data.bands?.[0]) || 0
         bassFloor += (bass - bassFloor) * smoothingAlpha(dt, 1.1)
         if (bass > bassFloor * 1.4 && bass > 0.2) {
           impulse = Math.max(impulse, Math.min(1, 0.55 + bass * 0.45))

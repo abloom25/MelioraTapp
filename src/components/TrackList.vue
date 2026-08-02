@@ -304,7 +304,7 @@
               class="spectrum-meter"
               aria-label="正在播放"
             >
-              <i v-for="band in 5" :key="band" />
+              <i v-for="band in 4" :key="band" />
             </span>
             <span v-else>{{ index + 1 }}</span>
           </span>
@@ -676,9 +676,6 @@
       }
       &:nth-child(4) {
         height: var(--spectrum-level-3, 8%);
-      }
-      &:nth-child(5) {
-        height: var(--spectrum-level-4, 8%);
       }
     }
   }

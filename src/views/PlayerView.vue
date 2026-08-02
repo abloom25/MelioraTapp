@@ -1367,7 +1367,7 @@
     left: 26px;
     z-index: 45;
     display: grid;
-    grid-template-columns: 156px minmax(0, 1fr) 132px;
+    grid-template-columns: 156px minmax(0, 1fr) 168px;
     align-items: stretch;
     gap: 12px;
     height: 56px;
@@ -1690,7 +1690,7 @@
   .settings-drop-enter-from,
   .settings-drop-leave-to {
     opacity: 0;
-    transform: translateY(calc(-100% - 18px)) scale(0.985);
+    transform: translateY(calc(100% + 18px)) scale(0.985);
   }
   .backdrop-enter-active,
   .backdrop-leave-active {
@@ -1724,7 +1724,7 @@
     .player-dock {
       right: 18px;
       left: 18px;
-      grid-template-columns: 148px minmax(0, 1fr) 124px;
+      grid-template-columns: 148px minmax(0, 1fr) 160px;
       gap: 10px;
     }
   }

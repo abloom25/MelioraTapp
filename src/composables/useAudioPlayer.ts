@@ -76,16 +76,18 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   // 进度时钟同步给节拍网格游标
   watch(currentTime, (time) => beat.syncProgress(time))
 
-  // 设置面板的音量/播放模式 → 宿主
+  // 设置面板的音量/播放模式 → 宿主;无宿主(本地开发)时跳过
   watch(
     () => store.settings.volume,
     (volume) => {
+      if (!hostMedia.available()) return
       void hostMedia.setVolume(volume).catch(() => {})
     },
   )
   watch(
     () => store.settings.playMode,
     (mode) => {
+      if (!hostMedia.available()) return
       const hostMode =
         mode === 'shuffle' ? 'shuffle' : mode === 'loop' ? 'repeat' : 'normal'
       void hostMedia.setMode(hostMode).catch(() => {})

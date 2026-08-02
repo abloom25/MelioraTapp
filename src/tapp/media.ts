@@ -141,6 +141,10 @@ export const hostMedia = {
   getPlaylist: (): Promise<HostPlaylistResult> =>
     api()!.getPlaylist ? api()!.getPlaylist!() : Promise.resolve([]),
   getLyrics: (args?: { songId?: string | number; source?: string }) => api()!.getLyrics(args),
+  // VIP 开关:读 media:read / 写 media:control;旧宿主缺失时按系统默认(跳过 VIP)
+  getSkipVip: () => (api()!.getSkipVip ? api()!.getSkipVip!() : Promise.resolve({ skipVip: true })),
+  setSkipVip: (skip: boolean) =>
+    api()!.setSkipVip ? api()!.setSkipVip!(skip) : Promise.resolve(),
   getBeatGrid: (): Promise<HostBeatGrid> =>
     api()!.getBeatGrid
       ? api()!.getBeatGrid!()

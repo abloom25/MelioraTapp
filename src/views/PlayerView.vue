@@ -3,6 +3,7 @@
   import { storeToRefs } from 'pinia'
     import { musicConfig } from '../config/music'
   import { hasTrackLyricsSource } from '../services/lyrics'
+  import { hostMedia } from '../tapp/media'
   import { loadConfiguredTracks, loadMusicConfig } from '../services/music'
   import { usePlayerStore } from '../stores/player'
   import { filterTracks } from '../utils/tracks'
@@ -87,6 +88,16 @@
   const { fullscreenActive, fullscreenSupported, toggleFullscreenMode } = useFullscreen({
     onShowNotice: showNotice,
   })
+
+  // VIP 歌曲开关(对齐官方 music-player):内部用 skip 语义,true=跳过 VIP(系统默认),
+  // 按钮高亮=允许播放 VIP;读写经宿主 getSkipVip/setSkipVip
+  const skipVip = ref(true)
+  const vipPlaybackAllowed = computed(() => !skipVip.value)
+  function toggleVipPlayback() {
+    triggerHaptic('selection')
+    skipVip.value = !skipVip.value
+    if (hostMedia.available()) void hostMedia.setSkipVip(skipVip.value).catch(() => {})
+  }
 
   // Cover cache composable (singleton)
   const {
@@ -567,6 +578,14 @@
   onMounted(() => {
     window.addEventListener('offline', showOfflineNotice)
     window.addEventListener('online', showOnlineNotice)
+    if (hostMedia.available()) {
+      void hostMedia
+        .getSkipVip()
+        .then((res) => {
+          if (res && typeof res.skipVip === 'boolean') skipVip.value = res.skipVip
+        })
+        .catch(() => {})
+    }
     void loadTracks().finally(() => {
       if (!navigator.onLine) showOfflineNotice()
     })
@@ -773,6 +792,14 @@
           >
             <TappIcon name="settings" :size="20" />
           </button>
+          <button
+            :class="{ active: vipPlaybackAllowed }"
+            aria-label="播放VIP歌曲"
+            title="播放VIP歌曲"
+            @click="toggleVipPlayback"
+          >
+            <TappIcon name="vip" :size="20" />
+          </button>
         </div>
       </div>
     </section>
@@ -837,6 +864,14 @@
           @click="toggleSettings"
         >
           <TappIcon name="settings" :size="19" />
+        </button>
+        <button
+          :class="{ active: vipPlaybackAllowed }"
+          aria-label="播放VIP歌曲"
+          title="播放VIP歌曲"
+          @click="toggleVipPlayback"
+        >
+          <TappIcon name="vip" :size="19" />
         </button>
       </div>
     </footer>
@@ -1367,7 +1402,7 @@
     left: 26px;
     z-index: 45;
     display: grid;
-    grid-template-columns: 156px minmax(0, 1fr) 168px;
+    grid-template-columns: 156px minmax(0, 1fr) 206px;
     align-items: stretch;
     gap: 12px;
     height: 56px;
@@ -1724,7 +1759,7 @@
     .player-dock {
       right: 18px;
       left: 18px;
-      grid-template-columns: 148px minmax(0, 1fr) 160px;
+      grid-template-columns: 148px minmax(0, 1fr) 198px;
       gap: 10px;
     }
   }

@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import { usePlayerStore } from '../stores/player'
   import { hasTrackLyricsSource, loadTrackLyrics } from '../services/lyrics'
-  import { findActiveLyricIndex } from '../utils/lyrics'
+  import { findActiveLyricIndex, hasMeaningfulLyrics } from '../utils/lyrics'
   import { supportsWebAnimations } from '../utils/browser'
   import { listenMediaQuery } from '../utils/media-query'
   import VerbatimText from './VerbatimText.vue'
@@ -165,7 +165,8 @@
     try {
       const parsedLines = await loadTrackLyrics(track, lyricsController.signal)
       if (id !== requestId) return
-      if (!parsedLines.length) {
+      // 占位词(「纯音乐,请欣赏」等)不算有效歌词,按无词处理(与官方一致)
+      if (!parsedLines.length || !hasMeaningfulLyrics(parsedLines)) {
         lines.value = []
         updateStatus('empty')
         return

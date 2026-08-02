@@ -792,14 +792,6 @@
           >
             <TappIcon name="settings" :size="20" />
           </button>
-          <button
-            :class="{ active: vipPlaybackAllowed }"
-            aria-label="播放VIP歌曲"
-            title="播放VIP歌曲"
-            @click="toggleVipPlayback"
-          >
-            <TappIcon name="vip" :size="20" />
-          </button>
         </div>
       </div>
     </section>
@@ -864,14 +856,6 @@
           @click="toggleSettings"
         >
           <TappIcon name="settings" :size="19" />
-        </button>
-        <button
-          :class="{ active: vipPlaybackAllowed }"
-          aria-label="播放VIP歌曲"
-          title="播放VIP歌曲"
-          @click="toggleVipPlayback"
-        >
-          <TappIcon name="vip" :size="19" />
         </button>
       </div>
     </footer>
@@ -977,6 +961,7 @@
         </header>
         <SettingsPanel
           :play-mode-text="playModeText"
+          :vip-playback-allowed="vipPlaybackAllowed"
           :sleep-timer-minutes="sleepTimerMinutes"
           :sleep-timer-remaining="sleepTimerRemaining"
           :sleep-timer-display-minutes="sleepTimerDisplayMinutes"
@@ -990,6 +975,7 @@
           :is-installed="isInstalled"
           :ios-install-available="iosInstallAvailable"
           @cycle-play-mode="cyclePlayModeWithHaptic"
+          @toggle-vip-playback="toggleVipPlayback"
           @sleep-timer-input="handleSleepTimerInput"
           @sleep-timer-change="handleSleepTimerChange"
           @toggle-fullscreen-mode="toggleFullscreenMode"
@@ -1402,7 +1388,7 @@
     left: 26px;
     z-index: 45;
     display: grid;
-    grid-template-columns: 156px minmax(0, 1fr) 206px;
+    grid-template-columns: 156px minmax(0, 1fr) 168px;
     align-items: stretch;
     gap: 12px;
     height: 56px;
@@ -1759,7 +1745,7 @@
     .player-dock {
       right: 18px;
       left: 18px;
-      grid-template-columns: 148px minmax(0, 1fr) 198px;
+      grid-template-columns: 148px minmax(0, 1fr) 160px;
       gap: 10px;
     }
   }

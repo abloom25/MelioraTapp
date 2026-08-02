@@ -13,6 +13,7 @@
 
   interface Props {
     playModeText: string
+    vipPlaybackAllowed: boolean
     sleepTimerMinutes: number
     sleepTimerRemaining: number
     sleepTimerDisplayMinutes: number
@@ -31,6 +32,7 @@
 
   const emit = defineEmits<{
     cyclePlayMode: []
+    toggleVipPlayback: []
     sleepTimerInput: [value: number]
     sleepTimerChange: [value: number]
     toggleFullscreenMode: []
@@ -65,6 +67,16 @@
         <button class="value-button" @click="emit('cyclePlayMode')">
           {{ playModeText }}
         </button>
+      </div>
+      <div class="setting-row toggle-row">
+        <span
+          ><strong>播放 VIP 歌曲</strong><small>关闭后自动跳过 VIP 歌曲</small></span
+        >
+        <ToggleSwitch
+          :model-value="vipPlaybackAllowed"
+          aria-label="播放 VIP 歌曲"
+          @update:model-value="emit('toggleVipPlayback')"
+        />
       </div>
       <SleepTimerControl
         :minutes="sleepTimerMinutes"

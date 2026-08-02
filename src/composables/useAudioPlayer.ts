@@ -33,6 +33,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   // 直接采纳会把乐观更新打回旧值,表现为进度条回跳
   let lastSeekAt = 0
   let lastSeekTarget = 0
+  let lastHostError = ''
 
   function isStaleSeekTick(position: number): boolean {
     return performance.now() - lastSeekAt < 800 && Math.abs(position - lastSeekTarget) > 2
@@ -52,6 +53,11 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   function applyStatus(status: HostStatus) {
     const wasTrackId = store.currentTrackId
     store.isPlaying = Boolean(status.isPlaying)
+
+    // 宿主播放错误(如 VIP 无权限)透传为 Toast;按内容去重避免每次状态帧重复弹
+    const hostError = typeof status.lastError === 'string' ? status.lastError : ''
+    if (hostError && hostError !== lastHostError) store.errorMessage = hostError
+    lastHostError = hostError
 
     const host = status.currentTrack
     if (host) {

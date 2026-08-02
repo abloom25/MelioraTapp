@@ -28,6 +28,8 @@ export interface HostStatus {
   volume?: number
   mode?: string
   muted?: boolean
+  /** 宿主最近一次播放错误(如 VIP 无权限播放失败) */
+  lastError?: string | null
 }
 
 export interface HostLyricLine {

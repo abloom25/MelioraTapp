@@ -592,7 +592,7 @@
       white-space: nowrap;
     }
 
-    // VIP/试听徽标,对齐官方 music-player 的金色 VIP 标
+    // VIP/试听徽标:半透明主题色,与应用整体视觉一致
     .track-badge {
       flex: 0 0 auto;
       padding: 1px 5px;
@@ -604,8 +604,8 @@
     }
 
     .track-badge.vip {
-      background: linear-gradient(135deg, #ffd700, #ffa500);
-      color: rgba(0, 0, 0, 0.72);
+      background: rgba(var(--accent-rgb), 0.16);
+      color: var(--accent);
     }
 
     .track-badge.trial {

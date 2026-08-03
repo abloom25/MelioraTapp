@@ -132,6 +132,9 @@
   // 移除 crossorigin 重新加载,保证封面显示(取色降级为默认色)。
   // 用 trackId + cover URL 持久记录已回退项,避免回切同一首歌时重复发起一次必失败的 CORS 请求。
   const coverCorsRetry = ref(new Set<string>())
+  // 源级 CORS 能力标记:任一封面 anonymous 失败即视为当前源不支持 CORS
+  // (沙箱 origin 为 null,宿主代理不回 ACAO 头时属于环境级问题,不是单图问题)
+  const coverCorsBlocked = ref(false)
   const { chromeHidden, scheduleChromeHide, clearChromeTimer } = useChromeAutoHide({
     listOpen,
     settingsOpen,
@@ -254,7 +257,9 @@
     const track = currentTrack.value
     if (!track?.cover || failedCovers.value.has(track.id)) return []
     const corsKey = coverRetryKey(track.id, track.cover)
-    const corsRetried = coverCorsRetry.value.has(corsKey)
+    // 已确认当前源不支持 CORS(宿主代理不回 ACAO 头)时,后续封面不再做
+    // anonymous 尝试,避免每张封面都在控制台刷一次 CORS 错误
+    const corsRetried = coverCorsBlocked.value || coverCorsRetry.value.has(corsKey)
     return [
       {
         id: track.id,
@@ -563,6 +568,7 @@
     // 保证封面显示;此时取色因 canvas 污染降级为默认色。
     // 已回退过仍失败说明资源本身不可用,走正常的 failedCovers 标记流程。
     if (!coverCorsRetry.value.has(corsKey)) {
+      coverCorsBlocked.value = true
       rememberCoverCorsRetry(corsKey)
       return
     }
